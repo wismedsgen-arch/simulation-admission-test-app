@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PSYCHOLOGIST
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TemplateKind {
+  PRELOADED
+  FOLLOW_UP
+}
+
+enum ExamCycleStatus {
+  DRAFT
+  READY
+  LIVE
+  ARCHIVED
+}
+
+enum CycleStudentStatus {
+  WAITING
+  CLAIMED
+  READY
+  ACTIVE
+  COMPLETED
+}
+
+enum SessionStatus {
+  READY
+  ACTIVE
+  COMPLETED
+  FORCED_ENDED
+  EXPIRED
+}
+
+enum ActorType {
+  STAFF
+  STUDENT
+  SYSTEM
+}
+
+enum TextDirection {
+  AUTO
+  LTR
+  RTL
+}
+
+enum ScenarioFileKind {
+  TEXT
+  UPLOAD
+}
+
+model User {
+  id               String               @id @default(cuid())
+  fullName         String
+  governmentId     String               @unique
+  passwordHash     String
+  role             UserRole
+  isApproved       Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  signupRequests   StaffSignupRequest[] @relation("ApprovedBy")
+  createdScenarios Scenario[]           @relation("ScenarioCreator")
+  createdCycles    ExamCycle[]          @relation("CycleCreator")
+  claimedStudents  ExamCycleStudent[]   @relation("ClaimedBy")
+  assignedSessions Session[]            @relation("AssignedPsychologist")
+  startedSessions  Session[]            @relation("StartedBy")
+  sessions         AppSession[]
+  auditLogs        AuditLog[]
+}
+
+model StaffSignupRequest {
+  id            String        @id @default(cuid())
+  fullName      String
+  governmentId  String        @unique
+  passwordHash  String
+  requestedRole UserRole
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  reviewedAt    DateTime?
+  approvedById  String?
+  approvedBy    User?         @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+}
+
+model Scenario {
+  id                  String                  @id @default(cuid())
+  name                String
+  description         String
+  openingTitle        String
+  openingInstructions String
+  openingInstructionsDirection TextDirection  @default(AUTO)
+  psychologistInstructions String            @default("")
+  psychologistInstructionsDirection TextDirection @default(AUTO)
+  durationMinutes     Int
+  isActive            Boolean                 @default(true)
+  createdById         String
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  createdBy           User                    @relation("ScenarioCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  roles               ScenarioRole[]
+  templates           ScenarioTemplate[]
+  files               ScenarioFile[]
+  cycles              ExamCycle[]
+  sessions            Session[]
+}
+
+model ScenarioRole {
+  id           String             @id @default(cuid())
+  scenarioId   String
+  name         String
+  category     String
+  description  String?
+  descriptionDirection TextDirection @default(AUTO)
+  accentColor  String             @default("#4285f4")
+  emailAddress String?
+  createdAt    DateTime           @default(now())
+  scenario     Scenario           @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  templates    ScenarioTemplate[]
+  messagesSent SessionMessage[]   @relation("MessageSenderRole")
+  drafts       Draft[]            @relation("DraftRecipientRole")
+}
+
+model ScenarioTemplate {
+  id         String                       @id @default(cuid())
+  scenarioId String
+  roleId     String
+  kind       TemplateKind
+  sendOrder  Int?
+  subject    String
+  body       String
+  bodyDirection TextDirection     @default(AUTO)
+  isEnabled  Boolean                      @default(true)
+  createdAt  DateTime                     @default(now())
+  updatedAt  DateTime                     @updatedAt
+  scenario   Scenario                     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  role       ScenarioRole                 @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  attachments ScenarioTemplateAttachment[]
+  messages   SessionMessage[]
+}
+
+model ScenarioTemplateAttachment {
+  id         String           @id @default(cuid())
+  templateId String
+  storageKey String
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime         @default(now())
+  template   ScenarioTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model ScenarioFile {
+  id         String           @id @default(cuid())
+  scenarioId String
+  name       String
+  kind       ScenarioFileKind
+  textContent String?
+  textDirection TextDirection @default(AUTO)
+  storageKey String?
+  fileName   String?
+  mimeType   String?
+  sizeBytes  Int?
+  createdAt  DateTime         @default(now())
+  scenario   Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+}
+
+model ExamCycle {
+  id           String            @id @default(cuid())
+  name         String
+  institution  String            @default("Weizmann Institute of Science")
+  scenarioId   String
+  accessCode   String            @default("0000")
+  status       ExamCycleStatus   @default(READY)
+  scheduledFor DateTime?
+  createdById  String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  createdBy    User              @relation("CycleCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  scenario     Scenario          @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
+  students     ExamCycleStudent[]
+  sessions     Session[]
+}
+
+model ExamCycleStudent {
+  id            String             @id @default(cuid())
+  examCycleId   String
+  fullName      String
+  governmentId  String
+  accessCode    String
+  status        CycleStudentStatus @default(WAITING)
+  claimedById   String?
+  claimedAt     DateTime?
+  readyAt       DateTime?
+  activatedAt   DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  examCycle     ExamCycle          @relation(fields: [examCycleId], references: [id], onDelete: Cascade)
+  claimedBy     User?              @relation("ClaimedBy", fields: [claimedById], references: [id], onDelete: SetNull)
+  session       Session?
+  appSessions   AppSession[]
+  auditLogs     AuditLog[]
+
+  @@unique([examCycleId, governmentId])
+}
+
+model Session {
+  id                      String           @id @default(cuid())
+  examCycleId             String
+  cycleStudentId          String           @unique
+  scenarioId              String
+  assignedPsychologistId  String
+  startedById             String
+  status                  SessionStatus    @default(READY)
+  introAcknowledgedAt     DateTime?
+  startedAt               DateTime?
+  endsAt                  DateTime?
+  endedAt                 DateTime?
+  extensionMinutes        Int              @default(0)
+  endReason               String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  examCycle               ExamCycle        @relation(fields: [examCycleId], references: [id], onDelete: Cascade)
+  cycleStudent            ExamCycleStudent @relation(fields: [cycleStudentId], references: [id], onDelete: Cascade)
+  scenario                Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Restrict)
+  assignedPsychologist    User             @relation("AssignedPsychologist", fields: [assignedPsychologistId], references: [id], onDelete: Restrict)
+  startedBy               User             @relation("StartedBy", fields: [startedById], references: [id], onDelete: Restrict)
+  messages                SessionMessage[]
+  drafts                  Draft[]
+}
+
+model SessionMessage {
+  id                String            @id @default(cuid())
+  sessionId         String
+  templateId        String?
+  senderType        ActorType
+  senderStaffId     String?
+  senderRoleId      String?
+  senderDisplayName String
+  recipientName     String
+  subject           String
+  body              String
+  bodyDirection     TextDirection      @default(AUTO)
+  replyToId         String?
+  requiresResponse  Boolean           @default(false)
+  resolvedAt        DateTime?
+  deletedByStaffAt  DateTime?
+  deletedByStudentAt DateTime?
+  sentAt            DateTime          @default(now())
+  session           Session           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  template          ScenarioTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  senderRole        ScenarioRole?     @relation("MessageSenderRole", fields: [senderRoleId], references: [id], onDelete: SetNull)
+  replyTo           SessionMessage?   @relation("MessageReplyChain", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies           SessionMessage[]  @relation("MessageReplyChain")
+  attachments       SessionAttachment[]
+}
+
+model SessionAttachment {
+  id         String         @id @default(cuid())
+  messageId  String
+  storageKey String
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime       @default(now())
+  message    SessionMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model Draft {
+  id              String        @id @default(cuid())
+  sessionId       String
+  authorType      ActorType
+  authorStaffId   String?
+  authorStudentId String?
+  recipientRoleId String?
+  subject         String        @default("")
+  body            String        @default("")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  session         Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  recipientRole   ScenarioRole? @relation("DraftRecipientRole", fields: [recipientRoleId], references: [id], onDelete: SetNull)
+
+  @@unique([sessionId, authorType, authorStaffId, authorStudentId])
+}
+
+model AppSession {
+  id            String           @id @default(cuid())
+  tokenHash     String           @unique
+  actorType     ActorType
+  userId        String?
+  cycleStudentId String?
+  expiresAt     DateTime
+  createdAt     DateTime         @default(now())
+  user          User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cycleStudent  ExamCycleStudent? @relation(fields: [cycleStudentId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id            String            @id @default(cuid())
+  actorType     ActorType
+  userId        String?
+  cycleStudentId String?
+  action        String
+  entityType    String
+  entityId      String
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  user          User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cycleStudent  ExamCycleStudent? @relation(fields: [cycleStudentId], references: [id], onDelete: SetNull)
+}
