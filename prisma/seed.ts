@@ -5,6 +5,22 @@ import { prisma } from "../src/lib/db/prisma";
 import scenarioData from "./scenario-ron-lab.json";
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function log(msg: string) {
+  console.log(`[seed] ${msg}`);
+}
+
+function skip(msg: string) {
+  console.log(`[seed] SKIP  ${msg}`);
+}
+
+function created(msg: string) {
+  console.log(`[seed] NEW   ${msg}`);
+}
+
+// ---------------------------------------------------------------------------
 // Admin bootstrap
 // ---------------------------------------------------------------------------
 
@@ -13,16 +29,16 @@ async function seedAdmin(): Promise<string | null> {
   const governmentId = process.env.BOOTSTRAP_ADMIN_ID;
   const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
 
-  // Original behaviour: if any env var is missing, do nothing.
+  // If bootstrap env vars are not set, do nothing (original behaviour).
   if (!name || !governmentId || !password) {
+    skip("Admin — BOOTSTRAP_ADMIN_* env vars not set, skipping admin and scenario seed.");
     return null;
   }
 
   const existing = await prisma.user.findUnique({ where: { governmentId } });
 
-  // Original behaviour: if the admin already exists, skip creation.
-  // We still return the ID so the scenario seed can run against the live DB.
   if (existing) {
+    skip(`Admin — "${existing.fullName}" already exists (${existing.id})`);
     return existing.id;
   }
 
@@ -36,7 +52,7 @@ async function seedAdmin(): Promise<string | null> {
     }
   });
 
-  console.log(`Created admin: ${admin.fullName} (${admin.id})`);
+  created(`Admin — "${admin.fullName}" (${admin.id})`);
   return admin.id;
 }
 
@@ -50,7 +66,7 @@ async function seedScenario(createdById: string) {
   });
 
   if (existing) {
-    console.log(`Scenario "${scenarioData.scenario.name}" already exists — skipping.`);
+    skip(`Scenario — "${scenarioData.scenario.name}" already exists (${existing.id})`);
     return;
   }
 
@@ -71,7 +87,7 @@ async function seedScenario(createdById: string) {
     }
   });
 
-  console.log(`\nCreated scenario: "${scenario.name}" (${scenario.id})`);
+  created(`Scenario — "${scenario.name}" (${scenario.id})`);
 
   // ------------------------------------------------------------------
   // 2. Roles — build key → Prisma ID map for template references
@@ -92,7 +108,7 @@ async function seedScenario(createdById: string) {
     });
 
     roleKeyMap[roleData.key] = role.id;
-    console.log(`  Role [${roleData.key}]: ${roleData.name} → ${role.id}`);
+    created(`  Role [${roleData.key}] — ${roleData.name}`);
   }
 
   // ------------------------------------------------------------------
@@ -125,9 +141,9 @@ async function seedScenario(createdById: string) {
     });
   }
 
-  console.log(
-    `  Templates: ${preloaded.length} PRELOADED (ordered 1–${preloaded.length}), ` +
-      `${followUp.length} FOLLOW_UP (בלת"מים)`
+  created(
+    `  Templates — ${preloaded.length} PRELOADED (ordered 1-${preloaded.length}), ` +
+      `${followUp.length} FOLLOW_UP`
   );
 
   // ------------------------------------------------------------------
@@ -147,10 +163,9 @@ async function seedScenario(createdById: string) {
         sizeBytes: null
       }
     });
-  }
 
-  console.log(`  Files: ${scenarioData.files.length} text documents`);
-  console.log(`\nScenario seeded successfully.\n`);
+    created(`  File — "${fileData.name}"`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,18 +173,23 @@ async function seedScenario(createdById: string) {
 // ---------------------------------------------------------------------------
 
 async function main() {
+  log("Starting seed...");
+
   const adminId = await seedAdmin();
 
   if (!adminId) {
+    log("Seed complete (no admin — scenario skipped).");
     return;
   }
 
   await seedScenario(adminId);
+
+  log("Seed complete.");
 }
 
 main()
   .catch((error) => {
-    console.error(error);
+    console.error("[seed] ERROR", error);
     process.exit(1);
   })
   .finally(async () => {

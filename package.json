@@ -2,11 +2,14 @@
   "name": "medical-school-simulation",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "build:railway": "next build",
-    "start": "prisma db push --skip-generate && next start",
+    "start": "prisma db push --skip-generate && prisma db seed && next start",
     "postinstall": "prisma generate",
     "lint": "next lint",
     "db:push": "prisma db push",
