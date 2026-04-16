@@ -3,13 +3,17 @@ import { z } from "zod";
 const textDirectionSchema = z.enum(["AUTO", "LTR", "RTL"]);
 
 export const scenarioSchema = z.object({
-  name: z.string().trim().min(3),
-  description: z.string().trim().min(10),
-  openingInstructions: z.string().trim().min(20),
+  name: z.string().trim().min(3, "Scenario name must be at least 3 characters"),
+  description: z.string().trim().min(10, "Description must be at least 10 characters"),
+  openingInstructions: z.string().trim().min(20, "Opening instructions must be at least 20 characters"),
   openingInstructionsDirection: textDirectionSchema.default("AUTO"),
-  psychologistInstructions: z.string().trim().min(20),
+  psychologistInstructions: z.string().trim().min(20, "Psychologist instructions must be at least 20 characters"),
   psychologistInstructionsDirection: textDirectionSchema.default("AUTO"),
-  durationMinutes: z.coerce.number().int().min(30).max(180)
+  durationMinutes: z.coerce
+    .number({ invalid_type_error: "Duration must be a number" })
+    .int("Duration must be a whole number")
+    .min(30, "Duration must be at least 30 minutes")
+    .max(180, "Duration cannot exceed 180 minutes")
 });
 
 export const scenarioRoleSchema = z.object({
