@@ -99,6 +99,7 @@ export default async function ScenarioDetailPage({
                 <ConfirmDeleteScenarioDialog scenarioId={scenario.id} scenarioName={scenario.name} />
               </div>
               <UpdateScenarioForm
+                key={scenario.updatedAt.toISOString()}
                 scenario={{
                   id: scenario.id,
                   name: scenario.name,
@@ -107,8 +108,7 @@ export default async function ScenarioDetailPage({
                   openingInstructionsDirection: scenario.openingInstructionsDirection,
                   psychologistInstructions: scenario.psychologistInstructions,
                   psychologistInstructionsDirection: scenario.psychologistInstructionsDirection,
-                  durationMinutes: scenario.durationMinutes,
-                  updatedAt: scenario.updatedAt.toISOString()
+                  durationMinutes: scenario.durationMinutes
                 }}
               />
             </div>

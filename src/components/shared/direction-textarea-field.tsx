@@ -15,6 +15,9 @@ type Props = {
   placeholder?: string;
   required?: boolean;
   minHeight?: number;
+  /** Controlled mode: provide value + onChange to keep value in parent state */
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
 export function DirectionTextareaField({
@@ -26,10 +29,14 @@ export function DirectionTextareaField({
   defaultDirection = "AUTO",
   placeholder,
   required,
-  minHeight
+  minHeight,
+  value,
+  onChange
 }: Props) {
   const [direction, setDirection] = useState<"AUTO" | "LTR" | "RTL">(defaultDirection);
   const dir = useMemo(() => toDomDir(direction), [direction]);
+
+  const isControlled = value !== undefined;
 
   return (
     <div className="field">
@@ -38,15 +45,28 @@ export function DirectionTextareaField({
         <TextDirectionToggle value={direction} onChange={setDirection} />
       </div>
       <input type="hidden" name={directionName} value={direction} />
-      <textarea
-        id={id}
-        name={name}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        required={required}
-        dir={dir}
-        style={minHeight ? { minHeight } : undefined}
-      />
+      {isControlled ? (
+        <textarea
+          id={id}
+          name={name}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          placeholder={placeholder}
+          required={required}
+          dir={dir}
+          style={minHeight ? { minHeight } : undefined}
+        />
+      ) : (
+        <textarea
+          id={id}
+          name={name}
+          defaultValue={defaultValue}
+          placeholder={placeholder}
+          required={required}
+          dir={dir}
+          style={minHeight ? { minHeight } : undefined}
+        />
+      )}
     </div>
   );
 }

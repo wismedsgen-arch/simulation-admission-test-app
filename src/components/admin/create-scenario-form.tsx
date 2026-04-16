@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { ActionSubmitButton } from "@/components/shared/action-submit-button";
 import { DirectionTextareaField } from "@/components/shared/direction-textarea-field";
@@ -15,6 +15,12 @@ type ActionResult = {
 
 export function CreateScenarioForm() {
   const [state, action] = useActionState(createScenarioAction, {} as ActionResult);
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [openingInstructions, setOpeningInstructions] = useState("");
+  const [psychologistInstructions, setPsychologistInstructions] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("90");
 
   const hasFieldErrors = state.fieldErrors && Object.keys(state.fieldErrors).length > 0;
 
@@ -43,11 +49,11 @@ export function CreateScenarioForm() {
       <div className="field-grid">
         <div className="field">
           <label htmlFor="name">Scenario name</label>
-          <input id="name" name="name" required />
+          <input id="name" name="name" required value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="field">
           <label htmlFor="description">Description</label>
-          <textarea id="description" name="description" required />
+          <textarea id="description" name="description" required value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <DirectionTextareaField
           id="openingInstructions"
@@ -55,6 +61,8 @@ export function CreateScenarioForm() {
           directionName="openingInstructionsDirection"
           defaultDirection="AUTO"
           required
+          value={openingInstructions}
+          onChange={setOpeningInstructions}
           label={
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <label htmlFor="openingInstructions">Opening instructions</label>
@@ -68,6 +76,8 @@ export function CreateScenarioForm() {
           directionName="psychologistInstructionsDirection"
           defaultDirection="AUTO"
           required
+          value={psychologistInstructions}
+          onChange={setPsychologistInstructions}
           label={
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <label htmlFor="psychologistInstructions">Psychologist opening instructions</label>
@@ -83,8 +93,9 @@ export function CreateScenarioForm() {
             type="number"
             min={30}
             max={180}
-            defaultValue={90}
             required
+            value={durationMinutes}
+            onChange={(e) => setDurationMinutes(e.target.value)}
           />
         </div>
       </div>

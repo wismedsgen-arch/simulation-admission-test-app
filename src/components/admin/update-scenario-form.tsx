@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ActionSubmitButton } from "@/components/shared/action-submit-button";
@@ -23,14 +23,18 @@ type ScenarioFormData = {
   psychologistInstructions: string;
   psychologistInstructionsDirection: "AUTO" | "LTR" | "RTL";
   durationMinutes: number;
-  /** ISO string — used as form key so fields remount when saved values change */
-  updatedAt: string;
 };
 
 export function UpdateScenarioForm({ scenario }: { scenario: ScenarioFormData }) {
   const router = useRouter();
   const [state, action] = useActionState(updateScenarioAction, {} as ActionResult);
   const prevStateRef = useRef<ActionResult>({});
+
+  const [name, setName] = useState(scenario.name);
+  const [description, setDescription] = useState(scenario.description);
+  const [openingInstructions, setOpeningInstructions] = useState(scenario.openingInstructions);
+  const [psychologistInstructions, setPsychologistInstructions] = useState(scenario.psychologistInstructions);
+  const [durationMinutes, setDurationMinutes] = useState(String(scenario.durationMinutes));
 
   useEffect(() => {
     if (state !== prevStateRef.current && state.success) {
@@ -70,30 +74,37 @@ export function UpdateScenarioForm({ scenario }: { scenario: ScenarioFormData })
         </div>
       ) : null}
 
-      {/*
-        key={scenario.updatedAt}: when a save succeeds, revalidatePath causes the Server Component
-        to pass a new updatedAt to this component. The key change remounts this form element,
-        resetting all fields (including nested DirectionTextareaField state) to the fresh defaultValues.
-        On validation failure, updatedAt is unchanged so the key stays the same and user input is preserved.
-      */}
-      <form key={scenario.updatedAt} action={action} className="stack-md">
+      <form action={action} className="stack-md">
         <input type="hidden" name="scenarioId" value={scenario.id} />
         <div className="field-grid">
           <div className="field">
             <label htmlFor="scenario-name">Scenario name</label>
-            <input id="scenario-name" name="name" defaultValue={scenario.name} required />
+            <input
+              id="scenario-name"
+              name="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
           <div className="field">
             <label htmlFor="scenario-description">Description</label>
-            <textarea id="scenario-description" name="description" defaultValue={scenario.description} required />
+            <textarea
+              id="scenario-description"
+              name="description"
+              required
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           <DirectionTextareaField
             id="openingInstructions"
             name="openingInstructions"
             directionName="openingInstructionsDirection"
-            defaultValue={scenario.openingInstructions}
             defaultDirection={scenario.openingInstructionsDirection}
             required
+            value={openingInstructions}
+            onChange={setOpeningInstructions}
             label={
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <label htmlFor="openingInstructions">Opening instructions</label>
@@ -105,9 +116,10 @@ export function UpdateScenarioForm({ scenario }: { scenario: ScenarioFormData })
             id="psychologistInstructions"
             name="psychologistInstructions"
             directionName="psychologistInstructionsDirection"
-            defaultValue={scenario.psychologistInstructions}
             defaultDirection={scenario.psychologistInstructionsDirection}
             required
+            value={psychologistInstructions}
+            onChange={setPsychologistInstructions}
             label={
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <label htmlFor="psychologistInstructions">Psychologist opening instructions</label>
@@ -123,8 +135,9 @@ export function UpdateScenarioForm({ scenario }: { scenario: ScenarioFormData })
               type="number"
               min={30}
               max={180}
-              defaultValue={scenario.durationMinutes}
               required
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(e.target.value)}
             />
           </div>
         </div>
