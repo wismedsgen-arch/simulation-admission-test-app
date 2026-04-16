@@ -7,6 +7,7 @@ import { useActionState } from "react";
 type ActionResult = {
   error?: string;
   success?: string;
+  fieldErrors?: Record<string, string>;
 };
 
 type Props = {
@@ -47,7 +48,7 @@ export function ActionForm({
 
   return (
     <form ref={formRef} action={formAction} className={className}>
-      {!hideMessages && state.error ? (
+      {!hideMessages && (state.error || (state.fieldErrors && Object.keys(state.fieldErrors).length > 0)) ? (
         <div
           className="panel"
           style={{
@@ -57,7 +58,15 @@ export function ActionForm({
             background: "#fff6f5"
           }}
         >
-          {state.error}
+          {state.fieldErrors && Object.keys(state.fieldErrors).length > 0 ? (
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {Object.values(state.fieldErrors).map((msg, i) => (
+                <li key={i}>{msg}</li>
+              ))}
+            </ul>
+          ) : (
+            state.error
+          )}
         </div>
       ) : null}
       {!hideMessages && state.success ? (
