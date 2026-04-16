@@ -33,6 +33,7 @@ import {
 type ActionResult = {
   error?: string;
   success?: string;
+  fieldErrors?: Record<string, string>;
 };
 
 async function ensureAdmin() {
@@ -150,7 +151,10 @@ export async function createScenarioAction(
   });
 
   if (!parsed.success) {
-    return { error: "Please complete all scenario fields." };
+    const fieldErrors = Object.fromEntries(
+      Object.entries(parsed.error.flatten().fieldErrors).map(([k, msgs]) => [k, msgs[0]])
+    );
+    return { fieldErrors };
   }
 
   const scenario = await prisma.scenario.create({
@@ -187,8 +191,15 @@ export async function updateScenarioAction(
     durationMinutes: formData.get("durationMinutes")
   });
 
-  if (!scenarioId || !parsed.success) {
-    return { error: "Please complete all scenario fields." };
+  if (!scenarioId) {
+    return { error: "Scenario not found." };
+  }
+
+  if (!parsed.success) {
+    const fieldErrors = Object.fromEntries(
+      Object.entries(parsed.error.flatten().fieldErrors).map(([k, msgs]) => [k, msgs[0]])
+    );
+    return { fieldErrors };
   }
 
   await prisma.scenario.update({
