@@ -7,16 +7,15 @@ import { ConfirmDeleteScenarioDialog } from "@/components/admin/confirm-delete-s
 import { ScenarioRoleCreateForm } from "@/components/admin/scenario-role-create-form";
 import { ScenarioRoleEditorList } from "@/components/admin/scenario-role-editor-list";
 import { ScenarioTemplateLibraryList } from "@/components/admin/scenario-template-library-list";
+import { UpdateScenarioForm } from "@/components/admin/update-scenario-form";
 import { ActionForm } from "@/components/shared/action-form";
 import { ActionSubmitButton } from "@/components/shared/action-submit-button";
 import { DirectionTextareaField } from "@/components/shared/direction-textarea-field";
-import { InfoTip } from "@/components/shared/info-tip";
 import { UiSelect } from "@/components/shared/ui-select";
 import {
   createScenarioFileAction,
   createScenarioTemplateAction,
-  deleteScenarioFileAction,
-  updateScenarioAction
+  deleteScenarioFileAction
 } from "@/lib/actions/admin";
 import { requireStaff } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
@@ -99,60 +98,19 @@ export default async function ScenarioDetailPage({
                 </div>
                 <ConfirmDeleteScenarioDialog scenarioId={scenario.id} scenarioName={scenario.name} />
               </div>
-              <ActionForm action={updateScenarioAction}>
-                <input type="hidden" name="scenarioId" value={scenario.id} />
-                <div className="field-grid">
-                  <div className="field">
-                    <label htmlFor="scenario-name">Scenario name</label>
-                    <input id="scenario-name" name="name" defaultValue={scenario.name} required />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="scenario-description">Description</label>
-                    <textarea id="scenario-description" name="description" defaultValue={scenario.description} required />
-                  </div>
-                  <DirectionTextareaField
-                    id="openingInstructions"
-                    name="openingInstructions"
-                    directionName="openingInstructionsDirection"
-                    defaultValue={scenario.openingInstructions}
-                    defaultDirection={scenario.openingInstructionsDirection}
-                    required
-                    label={
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <label htmlFor="openingInstructions">Opening instructions</label>
-                        <InfoTip text="This is the instructions the students see before entering the exam. It should explain everything they need to know about it." />
-                      </div>
-                    }
-                  />
-                  <DirectionTextareaField
-                    id="psychologistInstructions"
-                    name="psychologistInstructions"
-                    directionName="psychologistInstructionsDirection"
-                    defaultValue={scenario.psychologistInstructions}
-                    defaultDirection={scenario.psychologistInstructionsDirection}
-                    required
-                    label={
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <label htmlFor="psychologistInstructions">Psychologist opening instructions</label>
-                        <InfoTip text="These are shown to psychologists in the session desk and inside the live instructions popup." />
-                      </div>
-                    }
-                  />
-                  <div className="field">
-                    <label htmlFor="durationMinutes">Duration (minutes)</label>
-                    <input
-                      id="durationMinutes"
-                      name="durationMinutes"
-                      type="number"
-                      min={30}
-                      max={180}
-                      defaultValue={scenario.durationMinutes}
-                      required
-                    />
-                  </div>
-                </div>
-                <ActionSubmitButton label="Save scenario details" pendingLabel="Saving scenario..." />
-              </ActionForm>
+              <UpdateScenarioForm
+                scenario={{
+                  id: scenario.id,
+                  name: scenario.name,
+                  description: scenario.description,
+                  openingInstructions: scenario.openingInstructions,
+                  openingInstructionsDirection: scenario.openingInstructionsDirection,
+                  psychologistInstructions: scenario.psychologistInstructions,
+                  psychologistInstructionsDirection: scenario.psychologistInstructionsDirection,
+                  durationMinutes: scenario.durationMinutes,
+                  updatedAt: scenario.updatedAt.toISOString()
+                }}
+              />
             </div>
           </section>
         ) : null}
