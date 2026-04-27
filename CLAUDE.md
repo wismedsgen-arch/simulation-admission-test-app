@@ -130,3 +130,24 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 - Staff URLs are shared from the admin area, not listed on the public page.
 - Preloaded scenario emails must remain drag-reorderable (ordered by `sendOrder`).
 - Session expiry is lazy — `expireDueSessions()` is called at the start of most student actions.
+
+## Current Development Context
+
+- The app is fully deployed and functional on Railway
+- A Prisma seed script exists and is used to populate demo data
+- Seeding currently runs on startup for demo purposes
+- The system is in QA phase:
+  - Testing flows for admin, psychologist, and student roles
+  - Identifying bugs, validation issues, and UX improvements
+
+### Known Issues Being Investigated
+
+- Scenario creation fails with generic error: "Please complete all scenario fields"
+- Likely related to mismatch between Zod validation and Prisma schema (e.g. psychologistInstructions optional in DB but required in validation)
+
+### Development Priorities
+
+1. Fix validation bugs and improve error messaging
+2. Ensure seed script is safe for repeated deployments
+3. Improve UX for admin and scenario creation flows
+
