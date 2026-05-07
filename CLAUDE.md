@@ -136,18 +136,20 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 - The app is fully deployed and functional on Railway
 - A Prisma seed script exists and is used to populate demo data
 - Seeding currently runs on startup for demo purposes
-- The system is in QA phase:
-  - Testing flows for admin, psychologist, and student roles
-  - Identifying bugs, validation issues, and UX improvements
+- The system is in QA phase: testing admin/psychologist/student flows and gathering UX feedback
 
-### Known Issues Being Investigated
+### Data safety on Railway
 
-- Scenario creation fails with generic error: "Please complete all scenario fields"
-- Likely related to mismatch between Zod validation and Prisma schema (e.g. psychologistInstructions optional in DB but required in validation)
+- **Attachments**: with `STORAGE_MODE=local` (default), uploaded files live on Railway's ephemeral disk and are lost on every redeploy. Set `STORAGE_MODE=s3` (and the matching `STORAGE_*` vars) — or attach a Railway Volume — before any cycle that handles real candidate data.
+- **Seed runs on every boot**: `npm start` calls `prisma db seed` before `next start`, so the seed must remain idempotent (upsert-only, no destructive resets) to be safe across redeploys.
+- **DB backup**: use Railway's Postgres snapshot UI, or run an ad-hoc dump:
+  `railway run --service <db-service> -- pg_dump $DATABASE_URL --no-owner --no-acl > backup.sql`
 
 ### Development Priorities
 
-1. Fix validation bugs and improve error messaging
-2. Ensure seed script is safe for repeated deployments
-3. Improve UX for admin and scenario creation flows
+1. **Per-candidate post-exam review** — preserve all written content + uploaded files; provide an exportable consolidated report grouped by email thread per candidate (admin sees all, psychologist sees their own sessions only).
+2. **School answer + criteria beside each candidate reply** — for emails whose chain originated from a pre-built template (preloaded or follow-up), authored on the template at scenario-build time, shown psychologist-side during and after the exam.
+3. **Tighten review access control** and add admin-side data export of session transcripts + attachments.
+4. **Keep the seed script idempotent** so repeated deployments are safe.
+5. Continue UX improvements for scenario building and the psychologist desk.
 
