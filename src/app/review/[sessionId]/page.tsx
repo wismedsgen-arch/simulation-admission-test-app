@@ -1,4 +1,5 @@
 import { UserRole } from "@prisma/client";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -17,6 +18,7 @@ export default async function ReviewDetailPage({
   const actor = await requireStaff();
   await expireDueSessions();
   const { sessionId } = await params;
+  const isAdmin = actor.role === UserRole.ADMIN;
 
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
@@ -41,8 +43,17 @@ export default async function ReviewDetailPage({
     notFound();
   }
 
+  if (!isAdmin && session.assignedPsychologistId !== actor.userId) {
+    notFound();
+  }
+
   const content = (
     <div className="stack-lg">
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Link href={`/review/${session.id}/report`} className="btn btn-primary">
+          View consolidated report
+        </Link>
+      </div>
       <div className="metric-grid">
         <div className="panel metric-card">
           <span className="muted">Messages</span>

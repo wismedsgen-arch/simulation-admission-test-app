@@ -11,12 +11,14 @@ import { formatDateTime } from "@/lib/utils";
 export default async function ReviewListPage() {
   const actor = await requireStaff();
   await expireDueSessions();
+  const isAdmin = actor.role === UserRole.ADMIN;
 
   const sessions = await prisma.session.findMany({
     where: {
       status: {
         in: ["COMPLETED", "FORCED_ENDED", "EXPIRED"]
-      }
+      },
+      ...(isAdmin ? {} : { assignedPsychologistId: actor.userId })
     },
     include: {
       cycleStudent: true,
@@ -25,49 +27,59 @@ export default async function ReviewListPage() {
     orderBy: { endedAt: "desc" }
   });
 
+  const subtitle = isAdmin
+    ? "Open immutable completed timelines, attachments, and per-candidate consolidated reports."
+    : "Open immutable completed timelines and consolidated reports for the sessions you ran.";
+
   const content = (
     <section className="panel" style={{ padding: 22 }}>
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>Scenario</th>
-            <th>Status</th>
-            <th>Ended</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map((session) => (
-            <tr key={session.id}>
-              <td>
-                <Link href={`/review/${session.id}`} style={{ color: "#1a73e8", fontWeight: 700 }}>
-                  {session.cycleStudent.fullName}
-                </Link>
-              </td>
-              <td>{session.scenario.name}</td>
-              <td>{session.status}</td>
-              <td>{formatDateTime(session.endedAt)}</td>
+      {sessions.length === 0 ? (
+        <div className="muted">No completed sessions yet.</div>
+      ) : (
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Scenario</th>
+              <th>Status</th>
+              <th>Ended</th>
+              <th />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sessions.map((session) => (
+              <tr key={session.id}>
+                <td>
+                  <Link href={`/review/${session.id}`} style={{ color: "#1a73e8", fontWeight: 700 }}>
+                    {session.cycleStudent.fullName}
+                  </Link>
+                </td>
+                <td>{session.scenario.name}</td>
+                <td>{session.status}</td>
+                <td>{formatDateTime(session.endedAt)}</td>
+                <td>
+                  <Link href={`/review/${session.id}/report`} className="btn btn-secondary">
+                    Report
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 
-  if (actor.role === UserRole.ADMIN) {
+  if (isAdmin) {
     return (
-      <AdminShell active="overview" title="Completed session review" subtitle="Open immutable completed timelines, attachments, and timestamps.">
+      <AdminShell active="overview" title="Completed session review" subtitle={subtitle}>
         {content}
       </AdminShell>
     );
   }
 
   return (
-    <PsychologistShell
-      active="review"
-      title="Completed review"
-      subtitle="Review completed Weizmann Mail timelines, attachments, and timestamps."
-    >
+    <PsychologistShell active="review" title="Completed review" subtitle={subtitle}>
       {content}
     </PsychologistShell>
   );

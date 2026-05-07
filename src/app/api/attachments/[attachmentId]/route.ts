@@ -41,15 +41,13 @@ export async function GET(
 
   if ("userId" in actor) {
     const user = await prisma.user.findUnique({
-      where: { id: actor.userId }
+      where: { id: actor.userId },
+      select: { role: true }
     });
 
     const canAccess =
-      session.assignedPsychologistId === actor.userId ||
-      session.status === "COMPLETED" ||
-      session.status === "FORCED_ENDED" ||
-      session.status === "EXPIRED" ||
-      user?.role === UserRole.ADMIN;
+      user?.role === UserRole.ADMIN ||
+      session.assignedPsychologistId === actor.userId;
 
     if (!canAccess) {
       return new NextResponse("Forbidden", { status: 403 });
