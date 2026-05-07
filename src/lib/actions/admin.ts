@@ -27,6 +27,7 @@ import {
   scenarioFileSchema,
   scenarioRoleSchema,
   scenarioSchema,
+  scenarioTemplateFieldsSchema,
   scenarioTemplateSchema
 } from "@/lib/validation/domain";
 
@@ -318,7 +319,12 @@ export async function createScenarioTemplateAction(
     kind,
     subject,
     body,
-    bodyDirection: formData.get("bodyDirection") ?? "AUTO"
+    bodyDirection: formData.get("bodyDirection") ?? "AUTO",
+    itemCode: formData.get("itemCode") ?? "",
+    schoolAnswer: formData.get("schoolAnswer") ?? "",
+    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO",
+    evaluationCriteria: formData.get("evaluationCriteria") ?? "",
+    evaluationCriteriaDirection: formData.get("evaluationCriteriaDirection") ?? "AUTO"
   });
 
   if (!parsed.success) {
@@ -346,7 +352,12 @@ export async function createScenarioTemplateAction(
       sendOrder: nextPreloadedOrder,
       subject: parsed.data.subject,
       body: parsed.data.body,
-      bodyDirection: parsed.data.bodyDirection
+      bodyDirection: parsed.data.bodyDirection,
+      itemCode: parsed.data.itemCode || null,
+      schoolAnswer: parsed.data.schoolAnswer || null,
+      schoolAnswerDirection: parsed.data.schoolAnswerDirection,
+      evaluationCriteria: parsed.data.evaluationCriteria || null,
+      evaluationCriteriaDirection: parsed.data.evaluationCriteriaDirection
     }
   });
 
@@ -588,6 +599,53 @@ export async function deleteScenarioTemplateAction(
   await writeAdminAudit("delete_scenario_template", "ScenarioTemplate", templateId, { scenarioId });
   revalidatePath(`/admin/scenarios/${scenarioId}`);
   return { success: "Email template deleted." };
+}
+
+export async function updateScenarioTemplateFieldsAction(
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await ensureAdmin();
+
+  const parsed = scenarioTemplateFieldsSchema.safeParse({
+    templateId: formData.get("templateId"),
+    scenarioId: formData.get("scenarioId"),
+    itemCode: formData.get("itemCode") ?? "",
+    schoolAnswer: formData.get("schoolAnswer") ?? "",
+    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO",
+    evaluationCriteria: formData.get("evaluationCriteria") ?? "",
+    evaluationCriteriaDirection: formData.get("evaluationCriteriaDirection") ?? "AUTO"
+  });
+
+  if (!parsed.success) {
+    return { error: "Could not save the school answer and criteria for this template." };
+  }
+
+  const template = await prisma.scenarioTemplate.findUnique({
+    where: { id: parsed.data.templateId },
+    select: { id: true, scenarioId: true }
+  });
+
+  if (!template || template.scenarioId !== parsed.data.scenarioId) {
+    return { error: "That email template no longer exists." };
+  }
+
+  await prisma.scenarioTemplate.update({
+    where: { id: template.id },
+    data: {
+      itemCode: parsed.data.itemCode || null,
+      schoolAnswer: parsed.data.schoolAnswer || null,
+      schoolAnswerDirection: parsed.data.schoolAnswerDirection,
+      evaluationCriteria: parsed.data.evaluationCriteria || null,
+      evaluationCriteriaDirection: parsed.data.evaluationCriteriaDirection
+    }
+  });
+
+  await writeAdminAudit("update_scenario_template_fields", "ScenarioTemplate", template.id, {
+    scenarioId: template.scenarioId
+  });
+  revalidatePath(`/admin/scenarios/${template.scenarioId}`);
+  return { success: "School answer and criteria saved." };
 }
 
 export async function deleteScenarioAction(

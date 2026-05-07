@@ -190,6 +190,27 @@ export default async function ScenarioDetailPage({
                     label={<label htmlFor="body">Body</label>}
                   />
                   <div className="field">
+                    <label htmlFor="itemCode">Item code</label>
+                    <input id="itemCode" name="itemCode" placeholder="Optional, e.g. A or 3b" maxLength={40} />
+                    <span className="field-hint">Optional short label shown next to the candidate&apos;s reply during review.</span>
+                  </div>
+                  <DirectionTextareaField
+                    id="schoolAnswer"
+                    name="schoolAnswer"
+                    directionName="schoolAnswerDirection"
+                    defaultDirection="AUTO"
+                    label={<label htmlFor="schoolAnswer">School answer (psychologist-only)</label>}
+                    placeholder="Optional. Reference answer the psychologist sees alongside the candidate's reply."
+                  />
+                  <DirectionTextareaField
+                    id="evaluationCriteria"
+                    name="evaluationCriteria"
+                    directionName="evaluationCriteriaDirection"
+                    defaultDirection="AUTO"
+                    label={<label htmlFor="evaluationCriteria">Evaluation criteria (psychologist-only)</label>}
+                    placeholder="Optional. Bullet points or notes used when grading the candidate's reply."
+                  />
+                  <div className="field">
                     <label htmlFor="attachments">Attachments</label>
                     <input id="attachments" name="attachments" type="file" multiple />
                     <span className="field-hint">Optional. Leave empty if the template has no files.</span>
@@ -212,6 +233,11 @@ export default async function ScenarioDetailPage({
                     body: template.body,
                     roleName: template.role.name,
                     sendOrder: template.sendOrder ?? 1,
+                    itemCode: template.itemCode,
+                    schoolAnswer: template.schoolAnswer,
+                    schoolAnswerDirection: template.schoolAnswerDirection,
+                    evaluationCriteria: template.evaluationCriteria,
+                    evaluationCriteriaDirection: template.evaluationCriteriaDirection,
                     attachments: template.attachments.map((attachment) => ({
                       id: attachment.id,
                       fileName: attachment.fileName
@@ -236,6 +262,11 @@ export default async function ScenarioDetailPage({
                     body: template.body,
                     roleName: template.role.name,
                     sendOrder: template.sendOrder,
+                    itemCode: template.itemCode,
+                    schoolAnswer: template.schoolAnswer,
+                    schoolAnswerDirection: template.schoolAnswerDirection,
+                    evaluationCriteria: template.evaluationCriteria,
+                    evaluationCriteriaDirection: template.evaluationCriteriaDirection,
                     attachments: template.attachments.map((attachment) => ({
                       id: attachment.id,
                       fileName: attachment.fileName

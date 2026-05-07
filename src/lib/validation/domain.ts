@@ -32,7 +32,22 @@ export const scenarioTemplateSchema = z.object({
   kind: z.enum(["PRELOADED", "FOLLOW_UP"]),
   subject: z.string().trim().min(1),
   body: z.string().trim().min(1),
-  bodyDirection: textDirectionSchema.default("AUTO")
+  bodyDirection: textDirectionSchema.default("AUTO"),
+  itemCode: z.string().trim().max(40).optional().or(z.literal("")),
+  schoolAnswer: z.string().trim().max(8000).optional().or(z.literal("")),
+  schoolAnswerDirection: textDirectionSchema.default("AUTO"),
+  evaluationCriteria: z.string().trim().max(8000).optional().or(z.literal("")),
+  evaluationCriteriaDirection: textDirectionSchema.default("AUTO")
+});
+
+export const scenarioTemplateFieldsSchema = z.object({
+  templateId: z.string().min(1),
+  scenarioId: z.string().min(1),
+  itemCode: z.string().trim().max(40).optional().or(z.literal("")),
+  schoolAnswer: z.string().trim().max(8000).optional().or(z.literal("")),
+  schoolAnswerDirection: textDirectionSchema.default("AUTO"),
+  evaluationCriteria: z.string().trim().max(8000).optional().or(z.literal("")),
+  evaluationCriteriaDirection: textDirectionSchema.default("AUTO")
 });
 
 export const scenarioFileSchema = z.object({

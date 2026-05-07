@@ -1,14 +1,20 @@
 "use client";
 
-import { Eye, GripVertical, Paperclip, Trash2, X } from "lucide-react";
+import { Edit3, Eye, GripVertical, Paperclip, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
+import { ActionForm } from "@/components/shared/action-form";
+import { ActionSubmitButton } from "@/components/shared/action-submit-button";
+import { DirectionTextareaField } from "@/components/shared/direction-textarea-field";
 import {
   deleteScenarioTemplateAction,
-  reorderPreloadedTemplatesAction
+  reorderPreloadedTemplatesAction,
+  updateScenarioTemplateFieldsAction
 } from "@/lib/actions/admin";
+
+type TextDir = "AUTO" | "LTR" | "RTL";
 
 type TemplateItem = {
   id: string;
@@ -16,6 +22,11 @@ type TemplateItem = {
   body: string;
   roleName: string;
   sendOrder: number | null;
+  itemCode: string | null;
+  schoolAnswer: string | null;
+  schoolAnswerDirection: TextDir;
+  evaluationCriteria: string | null;
+  evaluationCriteriaDirection: TextDir;
   attachments: Array<{
     id: string;
     fileName: string;
@@ -44,6 +55,7 @@ export function ScenarioTemplateLibraryList({
   const [items, setItems] = useState(templates);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -213,6 +225,15 @@ export function ScenarioTemplateLibraryList({
                 <button
                   type="button"
                   className="icon-btn"
+                  aria-label={`Edit answer and criteria for ${template.subject}`}
+                  title="Edit school answer & criteria"
+                  onClick={() => setEditingId((current) => (current === template.id ? null : template.id))}
+                >
+                  <Edit3 size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn"
                   aria-label={`Preview ${template.subject}`}
                   onClick={() => setPreviewId(template.id)}
                 >
@@ -228,6 +249,51 @@ export function ScenarioTemplateLibraryList({
                 </button>
               </div>
             </div>
+
+            {editingId === template.id ? (
+              <div style={{ marginTop: 14 }}>
+                <ActionForm action={updateScenarioTemplateFieldsAction}>
+                  <input type="hidden" name="templateId" value={template.id} />
+                  <input type="hidden" name="scenarioId" value={scenarioId} />
+                  <div className="field-grid">
+                    <div className="field">
+                      <label htmlFor={`item-code-${template.id}`}>Item code</label>
+                      <input
+                        id={`item-code-${template.id}`}
+                        name="itemCode"
+                        defaultValue={template.itemCode ?? ""}
+                        placeholder="Optional, e.g. A or 3b"
+                        maxLength={40}
+                      />
+                      <span className="field-hint">Optional short label shown next to the candidate&apos;s reply during review.</span>
+                    </div>
+                    <DirectionTextareaField
+                      id={`school-answer-${template.id}`}
+                      name="schoolAnswer"
+                      directionName="schoolAnswerDirection"
+                      defaultValue={template.schoolAnswer ?? ""}
+                      defaultDirection={template.schoolAnswerDirection}
+                      label={<label htmlFor={`school-answer-${template.id}`}>School answer (psychologist-only)</label>}
+                      placeholder="Reference answer the psychologist sees alongside the candidate's reply."
+                    />
+                    <DirectionTextareaField
+                      id={`criteria-${template.id}`}
+                      name="evaluationCriteria"
+                      directionName="evaluationCriteriaDirection"
+                      defaultValue={template.evaluationCriteria ?? ""}
+                      defaultDirection={template.evaluationCriteriaDirection}
+                      label={<label htmlFor={`criteria-${template.id}`}>Evaluation criteria (psychologist-only)</label>}
+                      placeholder="Bullet points or notes used when grading the candidate's reply."
+                    />
+                  </div>
+                  <ActionSubmitButton
+                    label="Save answer & criteria"
+                    pendingLabel="Saving..."
+                    className="btn btn-secondary"
+                  />
+                </ActionForm>
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
