@@ -12,7 +12,15 @@ import { PrintButton } from "./print-button";
 type ReportMessage = Prisma.SessionMessageGetPayload<{
   include: {
     attachments: true;
-    template: { select: { kind: true; sendOrder: true } };
+    template: {
+      select: {
+        kind: true;
+        sendOrder: true;
+        itemCode: true;
+        schoolAnswer: true;
+        schoolAnswerDirection: true;
+      };
+    };
   };
 }>;
 
@@ -22,6 +30,9 @@ type Thread = {
   messages: ReportMessage[];
   kind: TemplateKind | null;
   sendOrder: number | null;
+  itemCode: string | null;
+  schoolAnswer: string | null;
+  schoolAnswerDirection: string | null;
 };
 
 const printStyles = `
@@ -93,6 +104,26 @@ const printStyles = `
     font-size: 0.85rem;
   }
   .report-thread + .report-thread { margin-top: 28px; }
+  .report-school-answer {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(26, 115, 232, 0.05);
+    border-left: 3px solid rgba(26, 115, 232, 0.35);
+    border-radius: 0 6px 6px 0;
+  }
+  .report-school-answer-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1a73e8;
+    margin-bottom: 6px;
+  }
+  .report-school-answer-body {
+    white-space: pre-wrap;
+    line-height: 1.7;
+    color: #202124;
+  }
   .report-message {
     border-top: 1px solid rgba(95, 99, 104, 0.12);
     padding-top: 12px;
@@ -130,7 +161,15 @@ export default async function ReviewReportPage({
       messages: {
         include: {
           attachments: true,
-          template: { select: { kind: true, sendOrder: true } }
+          template: {
+            select: {
+              kind: true,
+              sendOrder: true,
+              itemCode: true,
+              schoolAnswer: true,
+              schoolAnswerDirection: true
+            }
+          }
         },
         orderBy: { sentAt: "asc" }
       }
@@ -176,7 +215,10 @@ export default async function ReviewReportPage({
       root,
       messages,
       kind: root.template?.kind ?? null,
-      sendOrder: root.template?.sendOrder ?? null
+      sendOrder: root.template?.sendOrder ?? null,
+      itemCode: root.template?.itemCode ?? null,
+      schoolAnswer: root.template?.schoolAnswer ?? null,
+      schoolAnswerDirection: root.template?.schoolAnswerDirection ?? null
     };
   });
 
@@ -274,6 +316,8 @@ function ReportThreadSection({ index, thread }: { index: number; thread: Thread 
           ? "Pre-built follow-up"
           : "Candidate-initiated thread";
 
+  const itemCodePrefix = thread.itemCode ? `[${thread.itemCode}] ` : "";
+
   return (
     <section className="report-thread">
       <header
@@ -286,12 +330,25 @@ function ReportThreadSection({ index, thread }: { index: number; thread: Thread 
         }}
       >
         <h2 style={{ margin: 0, fontSize: "1.15rem" }}>
-          {index}. {thread.root.subject || "(no subject)"}
+          {index}. {itemCodePrefix}{thread.root.subject || "(no subject)"}
         </h2>
         <span className={thread.kind === TemplateKind.PRELOADED ? "report-pill" : "report-pill-muted"}>
           {itemLabel}
         </span>
       </header>
+
+      {thread.schoolAnswer ? (
+        <div className="report-school-answer">
+          <div className="report-school-answer-label">School answer &amp; evaluation criteria</div>
+          <div
+            className="report-school-answer-body"
+            dir={toDomDir(thread.schoolAnswerDirection)}
+            style={{ textAlign: toTextAlign(thread.schoolAnswerDirection) }}
+          >
+            {thread.schoolAnswer}
+          </div>
+        </div>
+      ) : null}
 
       {thread.messages.map((message) => (
         <ReportMessageBlock key={message.id} message={message} />
