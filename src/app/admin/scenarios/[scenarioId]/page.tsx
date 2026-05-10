@@ -199,16 +199,8 @@ export default async function ScenarioDetailPage({
                     name="schoolAnswer"
                     directionName="schoolAnswerDirection"
                     defaultDirection="AUTO"
-                    label={<label htmlFor="schoolAnswer">School answer (psychologist-only)</label>}
-                    placeholder="Optional. Reference answer the psychologist sees alongside the candidate's reply."
-                  />
-                  <DirectionTextareaField
-                    id="evaluationCriteria"
-                    name="evaluationCriteria"
-                    directionName="evaluationCriteriaDirection"
-                    defaultDirection="AUTO"
-                    label={<label htmlFor="evaluationCriteria">Evaluation criteria (psychologist-only)</label>}
-                    placeholder="Optional. Bullet points or notes used when grading the candidate's reply."
+                    label={<label htmlFor="schoolAnswer">School answer &amp; evaluation criteria (psychologist-only)</label>}
+                    placeholder="Optional. Reference answer and evaluation notes the psychologist sees alongside the candidate's reply."
                   />
                   <div className="field">
                     <label htmlFor="attachments">Attachments</label>
@@ -236,8 +228,6 @@ export default async function ScenarioDetailPage({
                     itemCode: template.itemCode,
                     schoolAnswer: template.schoolAnswer,
                     schoolAnswerDirection: template.schoolAnswerDirection,
-                    evaluationCriteria: template.evaluationCriteria,
-                    evaluationCriteriaDirection: template.evaluationCriteriaDirection,
                     attachments: template.attachments.map((attachment) => ({
                       id: attachment.id,
                       fileName: attachment.fileName
@@ -265,8 +255,6 @@ export default async function ScenarioDetailPage({
                     itemCode: template.itemCode,
                     schoolAnswer: template.schoolAnswer,
                     schoolAnswerDirection: template.schoolAnswerDirection,
-                    evaluationCriteria: template.evaluationCriteria,
-                    evaluationCriteriaDirection: template.evaluationCriteriaDirection,
                     attachments: template.attachments.map((attachment) => ({
                       id: attachment.id,
                       fileName: attachment.fileName

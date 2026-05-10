@@ -25,8 +25,6 @@ type TemplateItem = {
   itemCode: string | null;
   schoolAnswer: string | null;
   schoolAnswerDirection: TextDir;
-  evaluationCriteria: string | null;
-  evaluationCriteriaDirection: TextDir;
   attachments: Array<{
     id: string;
     fileName: string;
@@ -273,21 +271,12 @@ export function ScenarioTemplateLibraryList({
                       directionName="schoolAnswerDirection"
                       defaultValue={template.schoolAnswer ?? ""}
                       defaultDirection={template.schoolAnswerDirection}
-                      label={<label htmlFor={`school-answer-${template.id}`}>School answer (psychologist-only)</label>}
-                      placeholder="Reference answer the psychologist sees alongside the candidate's reply."
-                    />
-                    <DirectionTextareaField
-                      id={`criteria-${template.id}`}
-                      name="evaluationCriteria"
-                      directionName="evaluationCriteriaDirection"
-                      defaultValue={template.evaluationCriteria ?? ""}
-                      defaultDirection={template.evaluationCriteriaDirection}
-                      label={<label htmlFor={`criteria-${template.id}`}>Evaluation criteria (psychologist-only)</label>}
-                      placeholder="Bullet points or notes used when grading the candidate's reply."
+                      label={<label htmlFor={`school-answer-${template.id}`}>School answer &amp; evaluation criteria (psychologist-only)</label>}
+                      placeholder="Reference answer and evaluation notes the psychologist sees alongside the candidate's reply."
                     />
                   </div>
                   <ActionSubmitButton
-                    label="Save answer & criteria"
+                    label="Save school answer"
                     pendingLabel="Saving..."
                     className="btn btn-secondary"
                   />

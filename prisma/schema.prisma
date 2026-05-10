@@ -145,8 +145,6 @@ model ScenarioTemplate {
   itemCode   String?
   schoolAnswer String?
   schoolAnswerDirection TextDirection @default(AUTO)
-  evaluationCriteria String?
-  evaluationCriteriaDirection TextDirection @default(AUTO)
   isEnabled  Boolean                      @default(true)
   createdAt  DateTime                     @default(now())
   updatedAt  DateTime                     @updatedAt

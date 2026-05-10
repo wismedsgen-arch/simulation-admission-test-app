@@ -322,9 +322,7 @@ export async function createScenarioTemplateAction(
     bodyDirection: formData.get("bodyDirection") ?? "AUTO",
     itemCode: formData.get("itemCode") ?? "",
     schoolAnswer: formData.get("schoolAnswer") ?? "",
-    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO",
-    evaluationCriteria: formData.get("evaluationCriteria") ?? "",
-    evaluationCriteriaDirection: formData.get("evaluationCriteriaDirection") ?? "AUTO"
+    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO"
   });
 
   if (!parsed.success) {
@@ -355,9 +353,7 @@ export async function createScenarioTemplateAction(
       bodyDirection: parsed.data.bodyDirection,
       itemCode: parsed.data.itemCode || null,
       schoolAnswer: parsed.data.schoolAnswer || null,
-      schoolAnswerDirection: parsed.data.schoolAnswerDirection,
-      evaluationCriteria: parsed.data.evaluationCriteria || null,
-      evaluationCriteriaDirection: parsed.data.evaluationCriteriaDirection
+      schoolAnswerDirection: parsed.data.schoolAnswerDirection
     }
   });
 
@@ -612,13 +608,11 @@ export async function updateScenarioTemplateFieldsAction(
     scenarioId: formData.get("scenarioId"),
     itemCode: formData.get("itemCode") ?? "",
     schoolAnswer: formData.get("schoolAnswer") ?? "",
-    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO",
-    evaluationCriteria: formData.get("evaluationCriteria") ?? "",
-    evaluationCriteriaDirection: formData.get("evaluationCriteriaDirection") ?? "AUTO"
+    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO"
   });
 
   if (!parsed.success) {
-    return { error: "Could not save the school answer and criteria for this template." };
+    return { error: "Could not save the school answer for this template." };
   }
 
   const template = await prisma.scenarioTemplate.findUnique({
@@ -635,9 +629,7 @@ export async function updateScenarioTemplateFieldsAction(
     data: {
       itemCode: parsed.data.itemCode || null,
       schoolAnswer: parsed.data.schoolAnswer || null,
-      schoolAnswerDirection: parsed.data.schoolAnswerDirection,
-      evaluationCriteria: parsed.data.evaluationCriteria || null,
-      evaluationCriteriaDirection: parsed.data.evaluationCriteriaDirection
+      schoolAnswerDirection: parsed.data.schoolAnswerDirection
     }
   });
 
