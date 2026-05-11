@@ -135,21 +135,46 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 
 - The app is fully deployed and functional on Railway
 - A Prisma seed script exists and is used to populate demo data
-- Seeding currently runs on startup for demo purposes
+- **Seed runs on every boot** — Phase G (seed guard) is not yet implemented; see pending work below
 - The system is in QA phase: testing admin/psychologist/student flows and gathering UX feedback
+- Active branch: `feature/post-exam-review`
 
 ### Data safety on Railway
 
 - **Attachments**: with `STORAGE_MODE=local` (default), uploaded files live on Railway's ephemeral disk and are lost on every redeploy. Set `STORAGE_MODE=s3` (and the matching `STORAGE_*` vars) — or attach a Railway Volume — before any cycle that handles real candidate data.
-- **Seed runs on every boot**: `npm start` calls `prisma db seed` before `next start`, so the seed must remain idempotent (upsert-only, no destructive resets) to be safe across redeploys.
+- **Seed runs on every boot**: `npm start` calls `prisma db seed` before `next start`. Until Phase G is merged, avoid deploying to a real-event environment without first removing the seed call from `package.json` manually.
 - **DB backup**: use Railway's Postgres snapshot UI, or run an ad-hoc dump:
   `railway run --service <db-service> -- pg_dump $DATABASE_URL --no-owner --no-acl > backup.sql`
 
+### Post-exam review — phased implementation status
+
+#### Completed
+
+| Phase | Description | Key files changed |
+|---|---|---|
+| A | Merged `evaluationCriteria` + `evaluationCriteriaDirection` into single `schoolAnswer` + `schoolAnswerDirection` field on `ScenarioTemplate` | `prisma/schema.prisma`, `src/lib/validation/domain.ts`, `src/lib/actions/admin.ts`, `src/components/admin/scenario-template-library-list.tsx`, `prisma/seed.ts`, `prisma/scenario-ron-lab.json` |
+| B | School answer shown in consolidated report; full template inline editing (all fields); seed populated with demo school answers for all 17 templates | `src/app/review/[sessionId]/report/page.tsx`, `src/lib/actions/admin.ts`, admin scenario page |
+| B+ | Report TOC: thread classification (Preloaded / Follow-up / Psych-initiated / Candidate-initiated), status badges (Unanswered / Answered / Answered · Extended / Addressed / Unaddressed), last sender column, anchor links, per-thread message counts; candidate reply visual distinction (green highlight); unanswered template threads filtered from full sections | `src/app/review/[sessionId]/report/page.tsx` |
+| — | Student login redirect fix: redirects now preserve the actual request origin (LAN IP or Railway host) instead of hardcoded `APP_BASE_URL` | `src/app/student/login/submit/route.ts` |
+| — | Logout redirect now correctly sends staff to `/staff/login` and students to `/student/login` | `src/lib/actions/auth.ts` |
+
+#### Pending
+
+| Phase | Description | Notes |
+|---|---|---|
+| C | **School answer on the psychologist live desk** — show the school answer panel beside the candidate's first reply to each template-originated thread during active sessions | `src/components/psychologist/psychologist-workspace.tsx` + the page that fetches session data |
+| D | **Candidate action order / timeline** — number candidate replies chronologically (#1, #2…); show in live desk and report | `psychologist-workspace.tsx`, `report/page.tsx` |
+| E | **File audit trail** — add `uploadedByType` + `uploadedById` to `SessionAttachment`; add `uploadedByUserId` to `ScenarioFile`; expose in report | `prisma/schema.prisma`, student/psychologist/admin actions, `report/page.tsx` |
+| F | **No-hard-delete audit** — verify no code path physically removes messages, attachments, or scenario files after a session ends; replace any hard-delete with soft-delete | Audit only for now |
+| G | **Seed guard** — add `SEED_ON_BOOT` env var; seed exits immediately unless `SEED_ON_BOOT=true`; document in `.env.example` and here | `prisma/seed.ts`, `.env.example` |
+| H | **Admin data export** — `/admin/export` page: JSON session transcript download + CSV attachment manifest; both in-process (no shell tools required) | `src/app/admin/export/page.tsx`, `src/lib/actions/admin.ts` |
+
 ### Development Priorities
 
-1. **Per-candidate post-exam review** — preserve all written content + uploaded files; provide an exportable consolidated report grouped by email thread per candidate (admin sees all, psychologist sees their own sessions only).
-2. **School answer + criteria beside each candidate reply** — for emails whose chain originated from a pre-built template (preloaded or follow-up), authored on the template at scenario-build time, shown psychologist-side during and after the exam.
-3. **Tighten review access control** and add admin-side data export of session transcripts + attachments.
-4. **Keep the seed script idempotent** so repeated deployments are safe.
-5. Continue UX improvements for scenario building and the psychologist desk.
+1. **Phase C** — School answer on psychologist live desk (highest daily-use value, low risk).
+2. **Phase G** — Seed guard before any real-event deployment (must-do safety measure).
+3. **Phase D** — Candidate action order / timeline.
+4. **Phase E** — File audit trail (schema change, touches multiple actions).
+5. **Phase F** — No-hard-delete audit.
+6. **Phase H** — Admin data export.
 
