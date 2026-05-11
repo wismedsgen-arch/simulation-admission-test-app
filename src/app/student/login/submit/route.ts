@@ -7,15 +7,14 @@ import { normalizeInput } from "@/lib/utils";
 
 function getRedirectUrl(request: Request, pathnameWithQuery: string) {
   const requestUrl = new URL(request.url);
-  const explicitBaseUrl = process.env.APP_BASE_URL;
   const forwardedHost = request.headers.get("x-forwarded-host");
   const forwardedProto = request.headers.get("x-forwarded-proto");
 
-  const origin = explicitBaseUrl
-    ? explicitBaseUrl
-    : forwardedHost
-      ? `${forwardedProto ?? "https"}://${forwardedHost}`
-      : requestUrl.origin;
+  // Prefer forwarded headers (set by Railway/proxy). For direct requests (local/LAN),
+  // use the actual request origin so LAN IP redirects stay on the right host.
+  const origin = forwardedHost
+    ? `${forwardedProto ?? "https"}://${forwardedHost}`
+    : requestUrl.origin;
 
   return new URL(pathnameWithQuery, origin);
 }
