@@ -35,6 +35,28 @@ type Thread = {
   schoolAnswerDirection: string | null;
 };
 
+type ThreadStats = {
+  studentMsgCount: number;
+  staffMsgCount: number;
+  hasStudentReply: boolean;
+  isCandidateInitiated: boolean;
+  isExtended: boolean;
+  showFull: boolean;
+};
+
+function computeThreadStats(thread: Thread): ThreadStats {
+  const studentMsgCount = thread.messages.filter((m) => m.senderType === "STUDENT").length;
+  const staffMsgCount = thread.messages.filter((m) => m.senderType === "STAFF").length;
+  const hasStudentReply = studentMsgCount > 0;
+  const isCandidateInitiated = thread.kind === null;
+  // Extended = more back-and-forth than just root + single student reply
+  const isExtended = thread.messages.length > 2;
+  // Show full section unless it's an unanswered preloaded template email
+  const showFull =
+    hasStudentReply || isCandidateInitiated || thread.kind === TemplateKind.FOLLOW_UP;
+  return { studentMsgCount, staffMsgCount, hasStudentReply, isCandidateInitiated, isExtended, showFull };
+}
+
 const printStyles = `
   @page { margin: 18mm; }
   @media print {
@@ -103,6 +125,15 @@ const printStyles = `
     color: #5f6368;
     font-size: 0.85rem;
   }
+  .report-pill-green {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(52, 168, 83, 0.12);
+    color: #2d7a47;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
   .report-thread + .report-thread { margin-top: 28px; }
   .report-school-answer {
     margin-top: 12px;
@@ -129,6 +160,14 @@ const printStyles = `
     padding-top: 12px;
     margin-top: 12px;
   }
+  .report-message--student {
+    border-top: 1px solid rgba(52, 168, 83, 0.18);
+    border-left: 3px solid rgba(52, 168, 83, 0.45);
+    background: rgba(52, 168, 83, 0.06);
+    padding: 12px 12px 6px 14px;
+    margin-left: -3px;
+    border-radius: 0 4px 4px 0;
+  }
   .report-attachment-link {
     display: inline-flex;
     align-items: center;
@@ -138,6 +177,50 @@ const printStyles = `
     border: 1px solid rgba(95, 99, 104, 0.2);
     color: #1a73e8;
     font-size: 0.85rem;
+  }
+  .report-toc {
+    margin: 4px 0 0;
+  }
+  .report-toc-heading {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #5f6368;
+    margin: 0 0 10px;
+  }
+  .report-toc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  .report-toc-table th {
+    text-align: left;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #5f6368;
+    border-bottom: 2px solid rgba(95, 99, 104, 0.16);
+    white-space: nowrap;
+  }
+  .report-toc-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(95, 99, 104, 0.08);
+    vertical-align: middle;
+  }
+  .report-toc-table tr:last-child td {
+    border-bottom: none;
+  }
+  .report-toc-link {
+    color: #1a73e8;
+    text-decoration: none;
+  }
+  .report-toc-link:hover { text-decoration: underline; }
+  .report-num {
+    color: #5f6368;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
   }
 `;
 
@@ -231,6 +314,8 @@ export default async function ReviewReportPage({
     return left.root.sentAt.getTime() - right.root.sentAt.getTime();
   });
 
+  const threadStats = threads.map(computeThreadStats);
+
   const studentMessageCount = session.messages.filter((message) => message.senderType === "STUDENT").length;
   const psychologistMessageCount = session.messages.filter((message) => message.senderType === "STAFF").length;
   const attachmentCount = session.messages.reduce((sum, message) => sum + message.attachments.length, 0);
@@ -285,12 +370,80 @@ export default async function ReviewReportPage({
 
         <div className="report-divider" />
 
+        {threads.length > 0 ? (
+          <>
+            <section className="report-toc">
+              <p className="report-toc-heading">Contents</p>
+              <table className="report-toc-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 32 }}>#</th>
+                    <th style={{ width: 60 }}>Code</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: "right", width: 80 }}>Candidate</th>
+                    <th style={{ textAlign: "right", width: 60 }}>Staff</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {threads.map((thread, i) => {
+                    const stats = threadStats[i];
+                    const statusEl = stats.isCandidateInitiated ? (
+                      <span className="report-pill">Candidate-initiated</span>
+                    ) : stats.hasStudentReply ? (
+                      <span className="report-pill-green">
+                        Answered{stats.isExtended ? " · extended" : ""}
+                      </span>
+                    ) : (
+                      <span className="report-pill-muted">Unanswered</span>
+                    );
+                    return (
+                      <tr key={thread.rootId}>
+                        <td className="report-num">{i + 1}</td>
+                        <td>
+                          {thread.itemCode ? (
+                            <span className="chip mono" style={{ fontSize: "0.78rem" }}>
+                              {thread.itemCode}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td>
+                          {stats.showFull ? (
+                            <a href={`#thread-${i + 1}`} className="report-toc-link">
+                              {thread.root.subject || "(no subject)"}
+                            </a>
+                          ) : (
+                            <span style={{ color: "#5f6368" }}>
+                              {thread.root.subject || "(no subject)"}
+                            </span>
+                          )}
+                        </td>
+                        <td>{statusEl}</td>
+                        <td className="report-num" style={{ textAlign: "right" }}>
+                          {stats.studentMsgCount}
+                        </td>
+                        <td className="report-num" style={{ textAlign: "right" }}>
+                          {stats.staffMsgCount}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </section>
+            <div className="report-divider" />
+          </>
+        ) : null}
+
         {threads.length === 0 ? (
           <p>No emails were exchanged in this session.</p>
         ) : (
-          threads.map((thread, index) => (
-            <ReportThreadSection key={thread.rootId} index={index + 1} thread={thread} />
-          ))
+          threads.map((thread, i) => {
+            if (!threadStats[i].showFull) return null;
+            return (
+              <ReportThreadSection key={thread.rootId} index={i + 1} thread={thread} />
+            );
+          })
         )}
       </div>
     </>
@@ -319,7 +472,7 @@ function ReportThreadSection({ index, thread }: { index: number; thread: Thread 
   const itemCodePrefix = thread.itemCode ? `[${thread.itemCode}] ` : "";
 
   return (
-    <section className="report-thread">
+    <section id={`thread-${index}`} className="report-thread">
       <header
         style={{
           display: "flex",
@@ -358,12 +511,12 @@ function ReportThreadSection({ index, thread }: { index: number; thread: Thread 
 }
 
 function ReportMessageBlock({ message }: { message: ReportMessage }) {
-  const senderLabel =
-    message.senderType === "STUDENT"
-      ? "Candidate"
-      : message.senderType === "STAFF"
-        ? "Psychologist (in role)"
-        : "Scenario system";
+  const isStudent = message.senderType === "STUDENT";
+  const senderLabel = isStudent
+    ? "Candidate"
+    : message.senderType === "STAFF"
+      ? "Psychologist (in role)"
+      : "Scenario system";
 
   const trashedNotes: string[] = [];
   if (message.deletedByStudentAt) {
@@ -374,7 +527,7 @@ function ReportMessageBlock({ message }: { message: ReportMessage }) {
   }
 
   return (
-    <article className="report-message">
+    <article className={`report-message${isStudent ? " report-message--student" : ""}`}>
       <div
         style={{
           display: "flex",
