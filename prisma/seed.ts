@@ -145,6 +145,9 @@ async function seedScenario(createdById: string): Promise<string> {
         subject: templateData.subject,
         body: templateData.body,
         bodyDirection: templateData.bodyDirection as TextDirection,
+        itemCode: (templateData as { itemCode?: string }).itemCode ?? null,
+        schoolAnswer: (templateData as { schoolAnswer?: string }).schoolAnswer ?? null,
+        schoolAnswerDirection: ((templateData as { schoolAnswerDirection?: string }).schoolAnswerDirection ?? "AUTO") as TextDirection,
         isEnabled: true
       }
     });

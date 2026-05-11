@@ -8,18 +8,24 @@ import { createPortal } from "react-dom";
 import { ActionForm } from "@/components/shared/action-form";
 import { ActionSubmitButton } from "@/components/shared/action-submit-button";
 import { DirectionTextareaField } from "@/components/shared/direction-textarea-field";
+import { UiSelect } from "@/components/shared/ui-select";
 import {
   deleteScenarioTemplateAction,
+  deleteScenarioTemplateAttachmentAction,
   reorderPreloadedTemplatesAction,
-  updateScenarioTemplateFieldsAction
+  updateScenarioTemplateAction
 } from "@/lib/actions/admin";
 
 type TextDir = "AUTO" | "LTR" | "RTL";
 
+type Role = { id: string; name: string };
+
 type TemplateItem = {
   id: string;
+  roleId: string;
   subject: string;
   body: string;
+  bodyDirection: TextDir;
   roleName: string;
   sendOrder: number | null;
   itemCode: string | null;
@@ -41,11 +47,13 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
 export function ScenarioTemplateLibraryList({
   scenarioId,
   templates,
+  roles,
   emptyMessage,
   reorderable = false
 }: {
   scenarioId: string;
   templates: TemplateItem[];
+  roles: Role[];
   emptyMessage: string;
   reorderable?: boolean;
 }) {
@@ -249,21 +257,51 @@ export function ScenarioTemplateLibraryList({
             </div>
 
             {editingId === template.id ? (
-              <div style={{ marginTop: 14 }}>
-                <ActionForm action={updateScenarioTemplateFieldsAction}>
+              <div style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+                <ActionForm
+                  action={updateScenarioTemplateAction}
+                  onSuccess={() => setEditingId(null)}
+                >
                   <input type="hidden" name="templateId" value={template.id} />
                   <input type="hidden" name="scenarioId" value={scenarioId} />
                   <div className="field-grid">
+                    <div className="field">
+                      <label htmlFor={`role-${template.id}`}>Sender role</label>
+                      <UiSelect
+                        id={`role-${template.id}`}
+                        name="roleId"
+                        defaultValue={template.roleId}
+                        options={roles.map((role) => ({ value: role.id, label: role.name }))}
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`subject-${template.id}`}>Subject</label>
+                      <input
+                        id={`subject-${template.id}`}
+                        name="subject"
+                        defaultValue={template.subject}
+                        required
+                      />
+                    </div>
+                    <DirectionTextareaField
+                      id={`body-${template.id}`}
+                      name="body"
+                      directionName="bodyDirection"
+                      defaultValue={template.body}
+                      defaultDirection={template.bodyDirection}
+                      required
+                      label={<label htmlFor={`body-${template.id}`}>Body</label>}
+                    />
                     <div className="field">
                       <label htmlFor={`item-code-${template.id}`}>Item code</label>
                       <input
                         id={`item-code-${template.id}`}
                         name="itemCode"
                         defaultValue={template.itemCode ?? ""}
-                        placeholder="Optional, e.g. A or 3b"
+                        placeholder="Optional short label, e.g. A or 3b"
                         maxLength={40}
                       />
-                      <span className="field-hint">Optional short label shown next to the candidate&apos;s reply during review.</span>
+                      <span className="field-hint">Shown next to the candidate&apos;s reply in review and reports.</span>
                     </div>
                     <DirectionTextareaField
                       id={`school-answer-${template.id}`}
@@ -274,12 +312,52 @@ export function ScenarioTemplateLibraryList({
                       label={<label htmlFor={`school-answer-${template.id}`}>School answer &amp; evaluation criteria (psychologist-only)</label>}
                       placeholder="Reference answer and evaluation notes the psychologist sees alongside the candidate's reply."
                     />
+                    {template.attachments.length > 0 ? (
+                      <div className="field">
+                        <label>Existing attachments</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                          {template.attachments.map((attachment) => (
+                            <div key={attachment.id} style={{ display: "flex", alignItems: "center", gap: 6 }} className="chip">
+                              <Paperclip size={13} />
+                              {attachment.fileName}
+                              <button
+                                type="button"
+                                aria-label={`Remove ${attachment.fileName}`}
+                                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", color: "#d93025" }}
+                                onClick={() => {
+                                  if (!window.confirm(`Remove "${attachment.fileName}"?`)) return;
+                                  startTransition(async () => {
+                                    const result = await deleteScenarioTemplateAttachmentAction(attachment.id, scenarioId);
+                                    setFeedback(result.error ?? result.success ?? null);
+                                    router.refresh();
+                                  });
+                                }}
+                              >
+                                <X size={13} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="field">
+                      <label htmlFor={`attachments-${template.id}`}>Add attachments</label>
+                      <input id={`attachments-${template.id}`} name="attachments" type="file" multiple />
+                    </div>
                   </div>
-                  <ActionSubmitButton
-                    label="Save school answer"
-                    pendingLabel="Saving..."
-                    className="btn btn-secondary"
-                  />
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    <ActionSubmitButton
+                      label="Save changes"
+                      pendingLabel="Saving..."
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setEditingId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </ActionForm>
               </div>
             ) : null}
@@ -349,6 +427,37 @@ export function ScenarioTemplateLibraryList({
                   ) : (
                     <div className="muted">No attachments.</div>
                   )}
+
+                  {previewItem.itemCode || previewItem.schoolAnswer ? (
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--line)",
+                        paddingTop: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10
+                      }}
+                    >
+                      {previewItem.itemCode ? (
+                        <div>
+                          <div className="muted" style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>
+                            Item code
+                          </div>
+                          <span className="chip mono">{previewItem.itemCode}</span>
+                        </div>
+                      ) : null}
+                      {previewItem.schoolAnswer ? (
+                        <div>
+                          <div className="muted" style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>
+                            School answer &amp; evaluation criteria
+                          </div>
+                          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+                            {previewItem.schoolAnswer}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>,

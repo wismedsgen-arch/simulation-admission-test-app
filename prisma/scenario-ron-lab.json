@@ -9,7 +9,6 @@
     "psychologistInstructionsDirection": "RTL",
     "durationMinutes": 90
   },
-
   "roles": [
     {
       "key": "sara_levi",
@@ -120,7 +119,6 @@
       "emailAddress": "hani.schwartz@university.ac.il"
     }
   ],
-
   "templates": [
     {
       "roleKey": "sara_levi",
@@ -128,7 +126,10 @@
       "sendOrder": 1,
       "subject": "דחוף - ישיבת צוות היום - שינוי בסדר היום",
       "body": "שלום אורי,\n\nפרופ' רון תגיע היום ישר לישיבה וביקשה למסור שאתה תציג ראשון ותיתן לצוות סקירה על מה שהיה בכנס. מציעה לך לשלוח אלי השקף שלך (כן, צריך שקף....) לפני הפגישה כדי לראות אם תהיה לי עצה טובה לשיפור. בנוסף, טרם קבעת אתי פגישה כפי שהזמנתי אותך לעשות לפני שנסעת, על מנת לדבר על תכנון עבודתך לשנה הקרובה כדי ליעל תהליכים וקצב התקדמות.\n\nבהצלחה,\nד\"ר שרה לוי",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "1",
+      "schoolAnswer": "Expected: Acknowledge the schedule change and confirm attendance. Prepare/send a slide for the team meeting if not already done. Stay calm under last-minute pressure.\n\nCriteria: Responsiveness, organization, professional tone, appropriate assertiveness (may politely flag being underprepared).",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "alen_menheim",
@@ -136,7 +137,10 @@
       "sendOrder": 2,
       "subject": "Collaboration Opportunity - Time-sensitive",
       "body": "I received an email last night from a close research colleague at Oxford. They are looking for a researcher who will build a laboratory in your field of research at a new university hospital in Namibia. This is a joint project of several leading hospitals from Switzerland, Germany, and the Netherlands. His colleague from Switzerland saw you at the conference in Berlin and was impressed. We need your initial response regarding feasibility within the next week. Project start date is planned for October 26.\n\nBest regards, Alen\n\nP.S. - I hope there are no hard feelings about Prof. Ron giving me the opening presentation slot at the conference we are organizing here this coming October. I would be happy to work together on both my presentation and yours. I believe we could be a wonderful team together.",
-      "bodyDirection": "LTR"
+      "bodyDirection": "LTR",
+      "itemCode": "2",
+      "schoolAnswer": "Expected: Respond professionally to the collaboration opportunity. Candidate should not commit unilaterally — express interest, defer to Prof. Ron for a final decision, or ask clarifying questions.\n\nCriteria: Judgment about scope of authority, diplomatic communication, avoids over-committing on behalf of the lab.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "roi_shapira",
@@ -144,7 +148,10 @@
       "sendOrder": 3,
       "subject": "דחוף - חילוקי דעות בניתוח נתוני RNA-seq - דרושה החלטה מיידית",
       "body": "אורי ומעיין,\n\nנושא: הצגת הנתונים בפוסטר – צריך הכרעה מהירה.\nלכל חברי צוות GenoMap\n\nדיברנו בעבר על כמה אפשרויות להצגת תוצאות הניתוח, בעיקר בהקשר של השוואת ביטוי בין אזורים שונים ברקמה.\nאני צריך להגיש את הפוסטר לכנס, והדד-ליין הרשמי הוא הערב.\nאני מתלבט אם ללכת על גרסה שמדגישה את הביטוי השונה בין אזורים ברקמה – זו טענה שאנחנו רואים אותה בנתונים ואם תחזור על עצמה זהו חידוש מדהים לפרסום. אבל, עוד לא בטוחים בה במאה אחוז, או שעדיף גרסה שמציגה את הנתונים בצורה יותר ויזואלית שפחות מתחייבת לתוצאות חד משמיות.\n\nמאחר שזה פרויקט משותף של כולנו, חשובה לי תגובתכם – יעזור לי לשמוע מה דעתכם.\nאפשר בקצרה אפילו. אודה לחזרה של כולם עם מענה עד 17:00 היום.\n\nתודה!\nרועי",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "3",
+      "schoolAnswer": "Expected: Help resolve the RNA-seq data dispute constructively — suggest a meeting, propose a tie-breaking criterion, or defer to the PI — without dismissing either side.\n\nCriteria: Scientific judgment, conflict resolution, collaborative communication.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "david_even",
@@ -152,7 +159,10 @@
       "sendOrder": 4,
       "subject": "עדכון הזמנות בעלי חיים - אורי שלום",
       "body": "אורי,\nקיבלתי היום עדכון מספק עכברי המעבדה לצערו, גם המחזור הנוכחי נפגע מתנאי מזג האויר החריגים שהיו לפני שבועיים באזור, ולמרבה הצער, שוב יש בעיה עם הזמינות. הספק יכול לספק רק 35 עכברים בגיל המתאים, מתוך 50 שהזמנת ומזן מקביל ולא בדיוק זה שהזמנת (כמו שקבלה מיכל במחקר שלה, אם אתה זוכר).\nזה בוודאי לא באשמת אף אחד, זו בעיה ייחודית שהספק מתמודד איתה השנה. האפשרויות:\n1. לקבל מה שיש.\n2. לחכות 3-4 שבועות נוספים לאספקה מלאה\n3. לנסות ספק אחר (אף על פי שזה ידרוש אישור מחדש מועדת האתיקה)\n4. תבדוק בקבוצה המשותפת למעבדות אולי יש במקרה פתרון זמין למשהו.\nאני צריך תשובה עד מחר צהריים כדי לאשר או לבטל.\nבברכה,\nד\"ר דוד אבן",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "4",
+      "schoolAnswer": "Expected: Acknowledge the animal shortage and propose a practical response — prioritize critical experiments, consult Dr. David, or reschedule less urgent runs. Should not ignore or just forward.\n\nCriteria: Resource management, proactivity, decision-making under uncertainty.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "noa_rabin",
@@ -160,7 +170,10 @@
       "sendOrder": 5,
       "subject": "אני צריכה את עזרתך... שוב",
       "body": "אורי היקר,\nאני יודעת שאתה עמוס ושרק חזרת היום מהכנס, אבל אני ממש צריכה את העזרה שלך. הניסוי של הביומרקרים שעזרת לי להקים מתחיל להראות תוצאות מבטיחות! אחרי החודשיים הקשים שעברנו, זה הדבר הראשון שמציף לי תקווה. הבעיה: אני צריכה להגיש דוח ביניים לפרופ רון עד מחר בצהריים, ויש לי כמה שאלות סטטיסטיות על ניתוח הנתונים. מיכל עזבה ואין לי מי שיעזור. האם תוכל לעזור לי היום? זה יקח בערך שעה, ואם אתה עמוס אני יכולה לחכות עד מחר בבוקר מוקדם.\nתודה מראש,\nנועה, המסטרנטית.",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "5",
+      "schoolAnswer": "Expected: Respond with empathy without over-committing. Good response offers limited, concrete help and sets clear expectations given the candidate's own workload.\n\nCriteria: Empathy, time-management awareness, boundary-setting, interpersonal warmth.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "sara_levi",
@@ -168,7 +181,10 @@
       "sendOrder": 6,
       "subject": "קריזה בשיעור אחר - דרושה החלטה דחופה",
       "body": "חברים,\nיש לנו בעיה גדולה עם האירוע של \"שיעור אחר\" שמתוכנן למחר. 30 תלמידי תיכון אמורים להגיע במסגרת התכנית \"מדען ליום אחד\". זה אומר שצריך 3 מדריכים ולא 2 כפי שחשבנו, שוב טעינו בהערכה מראש של ההרשמה. מי מתנדב להצטרף?\nהאפשרויות:\n1. לבטל או לדחות האירוע (אכזבה רבה לסטודנטים ובתי הספר \"בונים עלינו\", לא בטוח שיש תכנית חליפית שיוכלו לארגן מראש אם \"נבריז\").\n2. לנסות להתגייס, כל אחד לפחות לכמה שעות.\n3. אם יש לכם רעיון יצירתי אחר מוזמנים להעלות.\nאני צריכה תשובה עד 14:00 היום.\nבברכה\nד\"ר שרה לוי.",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "6",
+      "schoolAnswer": "Expected: Handle the classroom crisis with calm decisiveness — address it directly or refer it to the appropriate authority (Prof. Ziv). Should not ignore or overreact.\n\nCriteria: Decisiveness, delegation vs. ownership judgment, teaching-role awareness.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "marcus_weiss",
@@ -176,7 +192,10 @@
       "sendOrder": 7,
       "subject": "עדכון דחוף - סטטוס דגימות הרקמה",
       "body": "אורי ומיכל,\nאני כותב בעניין הדגימות שאיבדנו בתקרית המקפיא לפני שבועיים. הוועדה הרפואית במכון החליטה שאנחנו לא יכולים להמשיך לספק דגימות נוספות עד שתוגש חקירה מקיפה של האירוע.\nהמצב מורכב כי:\n1. יש לנו 47 דגימות נוספות ממתינות בהקפאה\n2. הוועדה דורשת דוח בטיחות מפורט מפרופ' רון ו/או מי מטעמה.\n3. בינתיים, אסור לנו להעביר דגימות חדשות\nזה משפיע על כל לוח הזמנים של המחקר המשותף. אני צריך עדכון על הצעדים שאתם נוקטים לפתרון.\nבכבוד רב,\nפרופ' מרקוס וייס\nמנהל מח' פתולוגיה, מכון סוראסקי",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "7",
+      "schoolAnswer": "Expected: Respond to the tissue sample status update — acknowledge, ask follow-up questions if needed, ensure experiment continuity.\n\nCriteria: Scientific attention to detail, proactive follow-through.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "prof_ziv",
@@ -184,7 +203,10 @@
       "sendOrder": 8,
       "subject": "שגיאה אפשרית בשיעורי הבית - דרוש טיפול",
       "body": "אורי שלום,\nאני מקווה שאתה בטוב.\nקיבלתי את ההודעה הזו מאחת הסטודנטיות שטענה שיש בעיה בשיעורי הבית. אני לא בארץ כרגע וצריך שתענה לה בהקדם ואם אכן יש בעיה תקן את השאלה ותוציא הודעה על כך באתר הקורס.\nתודה\nפרופסור זיו.\n\n---\nשלום פרופסור זיו\nאני חושבת שנפלה טעות במשימת הבית של השבוע האחרון אשמח להתייחסותך.\nתודה,\nמירית שם טוב\nמסטרנטית בביוכמיה, קורס סטטיסטיקה מתקדמים 2\n---\n\nשיעורי בית:\nרקע:\nאור היא סטודנטית שנה א' לסטטיסטיקה, שמתעניינת בהרגלי שינה של חבריה לכיתה. היא שמה לב שחלק מחבריה מתלוננים על עייפות למרות שהם ישנים הרבה, בעוד אחרים שישנים מעט דווקא מרגישים ערניים.\nכדי לבדוק האם קיים קשר בין מספר שעות שינה בלילה לבין תחושת הערנות בבוקר, אור ערכה סקר בקרב 8 חברים. כל אחד מהם דיווח כמה שעות ישן בלילה האחרון (בין 5 ל-11 שעות), ואת תחושת הערנות בבוקר (בסולם מ-1 עד 10, כאשר 10 זו הערנות הגבוהה ביותר).\n\nשאלה:\nמה הייתה המסקנה של אור בעקבות הנתונים שאספה?\nא. ככל שישנים פחות – כך תחושת הערנות יורדת\nב. ככל שישנים יותר – כך תחושת הערנות עולה באופן עקבי\nג. מי שישן מעל 8 שעות תמיד מרגיש יותר עירני\nד. לא קיים קשר בין שעות שינה לערנות בבוקר",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "8",
+      "schoolAnswer": "Expected: Take the possible homework error seriously. Investigate before drawing conclusions; communicate clearly and fairly with the student involved.\n\nCriteria: Fairness, caution before judgment, clarity of communication.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "prof_ziv",
@@ -192,7 +214,10 @@
       "sendOrder": 9,
       "subject": "פנייה מועדת משמעת - דרוש טיפול דחוף",
       "body": "שלום אורי,\n\nפנו אלי מועדת המשמעת של המכון. סטודנטית בשם אורית רייכמן למדה בקורס שלנו בסמסטר א, סטטיסטיקה ב, וקבלה ציון סופי 75. קיבלתי מכתב מועדת המשמעת אשר לפיו היא נעדרה אצלנו משעור נוכחות חובה, וסטודנטית אחרת רשמה כי הייתה נוכחת. הדבר התגלה במקרה, בדיעבד, מתוך תצהיר שנתנה הסטודנטית שדווחה על הנעדרת כנוכחת, בעניין אחר הקשור אליה אישית.\nהועדה מבקשת התייחסותנו למקרה. העונש למקרים כאלו יכול להיות מכתב אזהרה והשעיה על תנאי לשנה, פסילת הקורס, או השעיה מידית לסמסטר. אני מקפיד בנוגע לנוכחות, כי אני חושב שחוקים ישנם כדי לקיים. בנוסף, בדקתי זאת בעבר, יש קשר חיובי ועקבי בין נוכחות בקורסי סטטיסטיקה לציוני סיום קורס.\nמזכירת הועדה אמרה לי כי השנה יש פחות הקפדה על נוכחות עבור סטודנטים שהיו להם הרבה ימי מילואים. אורית לא הייתה במילואים, אך הגישה מסמכי 100 ימי מילואים של בעלה בשנה האחרונה. אציין כי לסטודנטית אחרת באותו קורס נפסל המבחן כיון שהייתה עם טלפון בהישג יד בזמן המבחן, ולמרות הטענה כי עשתה זאת כיון שבעלה היה במילואים אני מנוע להתערב כיון שהיא בת של השכנים שלי. נתבקשנו להגיש המלצה עוד היום. (מסתבר ששלחו לי הודעה כבר לפני שבוע ולא שמתי לב עד אמש).\n\nבברכה\nפרופסור זיו",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "9",
+      "schoolAnswer": "Expected: Handle the disciplinary referral with appropriate gravity — escalate to the right person rather than resolving unilaterally; communicate sensitively.\n\nCriteria: Role clarity, escalation judgment, sensitivity.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "security_officer",
@@ -200,7 +225,10 @@
       "sendOrder": 10,
       "subject": "נוהל בטחון מעודכן - בוחן בקיאות חובה עד היום 12:00",
       "body": "שלום רב לכל סגל המכון והסטודנטים לתארים מתקדמים,\nנוהל בטיחות עודכן ב-30.4.25. המייל נשלח לראשונה ב-15.5 ונשלח שוב לכל מי שלא השלים הנדרש. על פי רישומנו טרם עברת את בוחן הבקיאות בנהלי החרום העדכניים במכון. הנושא הנו בעל דחיפות גבוהה. כולנו חווינו לאחרונה כמה חשוב להיות מוכן וערוך בכל רגע.\nאנא עברו על הנוהל המעודכן וענו על השאלות המצורפות במייל חוזר לא יאוחר מ-28.5 12:00.\n\nבוחן בקיאות - נוהל בטיחות רעידת אדמה והצפה מאי 25\n\nשאלה 1: במהלך רעידת אדמה יש לעזוב מיידית את המבנה. [ ] נכון [ ] לא נכון\nשאלה 2: לפני רעידת אדמה יש לוודא שכל החומרים המסוכנים מאוחסנים במכלים מוגנים. [ ] נכון [ ] לא נכון\nשאלה 3: במקרה של הצפה, יש לנתק את החשמל רק אחרי שהמים נכנסו למעבדה. [ ] נכון [ ] לא נכון\nשאלה 4: ממונה בטיחות מעבדת רון הנה פרופסור רון ולה יש לדווח על כל איום או מפגע מיידית ולא יאוחר משעה אחר חשיפה, בהתאמה לסוג האיום. [ ] כן [ ] לא\nשאלה 5: תרגילי פינוי צריכים להתקיים אחת לשנה. [ ] נכון [ ] לא נכון\nשאלה 6: במהלך רעידת אדמה יש להסתתר ליד חלונות כדי לראות את מה שקורה בחוץ. [ ] נכון [ ] לא נכון\nשאלה 7: בהצפה עם התרעה מוקדמת, יש להעביר ציוד רגיש לקומות גבוהים יותר. [ ] כן [ ] לא\nשאלה 8: נתוני המחקר הקריטיים מגובים מדי שבוע למתקן חיצוני. [ ] נכון [ ] לא נכון\nשאלה 9: יש לבצע כל מחקר בשני אתרים שונים המרוחקים זה מזה לפחות 100 ק\"מ כדי להבטיח רציפות בכל מצב. [ ] נכון [ ] לא נכון\nשאלה 10: ניתן לחזור לפעילות כ-24 שעות אחר שאין תסמינים של הצפה / רעידת אדמה / התקפת טילים בליסטים. [ ] נכון [ ] לא נכון\nשאלה 11: ערכות עזרה וחובש מוסמך חייבים להיות נוכחים בכל רגע בכל מעבדה. [ ] נכון [ ] לא נכון\nשאלה 12: במקרה של נזק למעבדות, ניתן להעביר מחקרים קריטיים למוסדות שותפים תוך 48 שעות. [ ] נכון [ ] לא נכון\nשאלה 13: צוות ה-IT מפעיל מערכת גיבוי חלופית תוך שעתיים במקרה נזק למתקן הראשי. [ ] נכון [ ] לא נכון\n\nבברכה\nשלומה צור\nקב\"ט",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "10",
+      "schoolAnswer": "Expected: Comply with the safety procedure update, or clearly flag why it cannot be done in time with a proposed alternative. Must not ignore a compliance deadline.\n\nCriteria: Compliance awareness, prioritization, responsibility.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "sara_levi",
@@ -208,16 +236,21 @@
       "sendOrder": 11,
       "subject": "עריכת שקף מצגת לרופאים",
       "body": "הי אורי\nזוכר את כנס הרופאים? הנה זה בא בעוד יומיים, הבטחת לי לפני הכנס שקף המבוסס על סקירת מחקרים מובילים בתחום, שמתי את הסקירה בדרייב המשותף. מדובר בכנס לרופאי משפחה המלווים חולות ובני משפחותיהן. האם השקף מוכן? מזכירה כי יש לשלוח עד היום ב-14:00 למחלקת הכנסים.\n\nבברכה\nשרה לוי",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "11",
+      "schoolAnswer": "Expected: Edit or provide input on the physicians presentation slide as requested, and confirm what is needed and by when.\n\nCriteria: Teamwork, clarity of communication, responsiveness to PI expectations.",
+      "schoolAnswerDirection": "LTR"
     },
-
     {
       "roleKey": "sara_levi",
       "kind": "FOLLOW_UP",
       "sendOrder": null,
       "subject": "בלת\"מ 1 - תזכורת: השקף לרופאים",
       "body": "הי אורי, זו שרה. מה עם השקף לרופאים? קיבלתי כבר 5 תזכורים ממשרד הכנסים, לא נעים לי.",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "F1",
+      "schoolAnswer": "Follow-up — Slide reminder. Expected: prompt acknowledgment and action.\n\nCriteria: Responsiveness to escalation, time awareness.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "danny_insurance",
@@ -225,7 +258,10 @@
       "sendOrder": null,
       "subject": "בלת\"מ 2 - חידוש ביטוח דחוף - היום בלבד",
       "body": "הי אורי, אנא צור קשר דחוף. זה דני, סוכן הביטוח שלך. חייבים לשלם היום עבור חידוש פוליסות בטוח דירה ובטוח רכב. התפעול בחברת הבטוח עלול להסגר גם לפני 13:00 ואז תמצא עצמך בלי ביטוח רכב בתוקף מחר. מקווה ששמת לב להעלאת תעריף הביטוח המקיף ב-30 אחוז משנה קודמת בשל התביעה שמופיעה בעבר הביטוחי שלך.",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "F2",
+      "schoolAnswer": "Follow-up — Urgent insurance renewal. Expected: handle or consciously delegate; the time constraint makes prioritization explicit.\n\nCriteria: Administrative prioritization, efficient action.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "yael_hazon",
@@ -233,7 +269,10 @@
       "sendOrder": null,
       "subject": "בלת\"מ 3 - צריכה כמה דקות לפני הישיבה",
       "body": "הי אורי, אני יעל חזון, חייבת לדבר עם משהו, ואתה הכי מתאים. תוכל להקדיש לי כמה דקות, אני בלחץ רב לקראת ההצגה הראשונה שלי היום בישיבת הצוות.",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "F3",
+      "schoolAnswer": "Follow-up — Colleague requests a few minutes before the meeting. Candidate must balance social/interpersonal needs against meeting preparation time.\n\nCriteria: Interpersonal sensitivity, time management, relationship maintenance.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "hani_schwartz",
@@ -241,7 +280,10 @@
       "sendOrder": null,
       "subject": "בלת\"מ 4 - עזרה דחופה - תגובה לפרופ' רון",
       "body": "הי אורי, חייבת שתעזור לי לחשוב מה אני עונה מיידית לפרופסור רון. היא בקשה להושיב לידי את הדוקטורנט החדש שאמור להגיע ואני חוששת שלא אדע מספיק לשים גבול בין הנכונות והרצון לעזור לעמית חדש, ובין הצורך לקדם הפרויקטים שלי.",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "F4",
+      "schoolAnswer": "Follow-up — Urgent help drafting a reply to Prof. Ron. Tests willingness to assist under pressure and quality of communication.\n\nCriteria: Collaboration, writing quality, response under pressure.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "caregiver",
@@ -249,7 +291,10 @@
       "sendOrder": null,
       "subject": "בלת\"מ 5 - הבן מעלה חום - מה לעשות?",
       "body": "הי אורי, זו המטפלת של הבן. הוא מעלה חום. נתתי לו נורופן לפני שעה וחצי והחום ירד מתחת ל-37 מעלות צלסיוס, ועכשיו נראה לי שעלה לו החום, אבל הבטרייה של המדחום כנראה התקלקלה. מה לעשות? ניסיתי גם את ההורה השני אף שמראש נאמר לי הבוקר שלא תהיה זמינות שלו / שלה עד 15:00, בגלל הרצאה בכנס היום. מה לעשות?",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "F5",
+      "schoolAnswer": "Follow-up — Child has a fever. A personal/family interruption mid-exam tests how the candidate handles emotional work-life conflict under pressure.\n\nCriteria: Emotional regulation, work-life boundary awareness, decision-making under personal stress.",
+      "schoolAnswerDirection": "LTR"
     },
     {
       "roleKey": "david_even",
@@ -257,10 +302,12 @@
       "sendOrder": null,
       "subject": "בלת\"מ 6 - עלייה במחיר חומר צביעת תאים - החלטה נדרשת",
       "body": "הי אורי, החומר צובע התאים שהזמנת, מסוג הננו חלקיקים המתקדם והחדשני, זה שמסוגל לזהות גם 30 תתי זנים שונים של המחלה, עלה במחיר בחודש האחרון בכ-25% ואולי אף יותר, בשל קשיי השינוע וקשיי שמירת התנאים בזמן השינוע.\nמה תרצה לעשות? זה ישפיע משמעותית מאד על יתרת התקציב שלך למחקר עד סוף השנה. אולי תסתפק בשלב זה בחומר הוותיק והמהמן שלא מבחין טוב בהבדלים בין תתי זנים שונים של המחלה? עולה מראש 40 אחוז פחות מהחומר החדש לפני העלאה. הבנתי מד\"ר שרה לוי שבשלב הזה של מחקרי המעבדה שלך אתה עוד לא מתעסק בכלל בזיהוי תתי זנים והשוואת אפקטיביות הטיפולים עליהם, אלא שזה \"נייס טו הב\", למקרה שיתגלו תוצאות חדשות שלא צפיתם. אנא ענה לי עד סוף היום, חייבים להזמין היום כדי שיגיע בזמן.\nד.א: אם מדובר בחומר הרגיל, לדעתי אורי ששון הזמין לפני שבוע כמות כפולה ממה שצריך מיידית, במחשבה שהחומר תקף עוד 8 חדשים. בשלב זה של הניסוי הוא זקוק לחצי מהכמות שהזמין, ובעוד 7 חודשים הוא יצטרך כמות זהה של החומר. מה דעתך לבקש ממנו את החומר שהזמין לעוד 7 חודשים ולהבטיח לו כי תזמין עבורו כשיצטרך?",
-      "bodyDirection": "RTL"
+      "bodyDirection": "RTL",
+      "itemCode": "F6",
+      "schoolAnswer": "Follow-up — Staining reagent price increase. Expected: evaluate options and escalate if beyond candidate authority.\n\nCriteria: Budget awareness, escalation judgment, decisiveness.",
+      "schoolAnswerDirection": "LTR"
     }
   ],
-
   "files": [
     {
       "name": "רשימות מכנס ברלין - מאי 2025",

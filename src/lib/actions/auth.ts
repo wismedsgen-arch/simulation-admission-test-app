@@ -9,6 +9,7 @@ import {
   createStaffSession,
   createStudentSession,
   destroySession,
+  getCurrentActor,
   hasApprovedAdmin
 } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
@@ -238,7 +239,8 @@ export async function studentLoginAction(
 }
 
 export async function logoutAction() {
+  const actor = await getCurrentActor();
+  const isStaff = actor?.actorType === ActorType.STAFF;
   await destroySession();
-  revalidatePath("/");
-  redirect("/");
+  redirect(isStaff ? "/staff/login" : "/student/login");
 }

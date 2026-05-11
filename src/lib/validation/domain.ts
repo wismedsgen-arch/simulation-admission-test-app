@@ -46,6 +46,18 @@ export const scenarioTemplateFieldsSchema = z.object({
   schoolAnswerDirection: textDirectionSchema.default("AUTO")
 });
 
+export const scenarioTemplateUpdateSchema = z.object({
+  templateId: z.string().min(1),
+  scenarioId: z.string().min(1),
+  roleId: z.string().min(1),
+  subject: z.string().trim().min(1),
+  body: z.string().trim().min(1),
+  bodyDirection: textDirectionSchema.default("AUTO"),
+  itemCode: z.string().trim().max(40).optional().or(z.literal("")),
+  schoolAnswer: z.string().trim().max(8000).optional().or(z.literal("")),
+  schoolAnswerDirection: textDirectionSchema.default("AUTO")
+});
+
 export const scenarioFileSchema = z.object({
   scenarioId: z.string().min(1),
   name: z.string().trim().min(1),

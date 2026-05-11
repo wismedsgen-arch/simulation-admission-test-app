@@ -28,7 +28,8 @@ import {
   scenarioRoleSchema,
   scenarioSchema,
   scenarioTemplateFieldsSchema,
-  scenarioTemplateSchema
+  scenarioTemplateSchema,
+  scenarioTemplateUpdateSchema
 } from "@/lib/validation/domain";
 
 type ActionResult = {
@@ -637,7 +638,108 @@ export async function updateScenarioTemplateFieldsAction(
     scenarioId: template.scenarioId
   });
   revalidatePath(`/admin/scenarios/${template.scenarioId}`);
-  return { success: "School answer and criteria saved." };
+  return { success: "School answer saved." };
+}
+
+export async function updateScenarioTemplateAction(
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await ensureAdmin();
+
+  const parsed = scenarioTemplateUpdateSchema.safeParse({
+    templateId: formData.get("templateId"),
+    scenarioId: formData.get("scenarioId"),
+    roleId: formData.get("roleId"),
+    subject: formData.get("subject"),
+    body: formData.get("body"),
+    bodyDirection: formData.get("bodyDirection") ?? "AUTO",
+    itemCode: formData.get("itemCode") ?? "",
+    schoolAnswer: formData.get("schoolAnswer") ?? "",
+    schoolAnswerDirection: formData.get("schoolAnswerDirection") ?? "AUTO"
+  });
+
+  if (!parsed.success) {
+    return { error: "Complete the sender, subject, and body fields." };
+  }
+
+  const template = await prisma.scenarioTemplate.findUnique({
+    where: { id: parsed.data.templateId },
+    select: { id: true, scenarioId: true }
+  });
+
+  if (!template || template.scenarioId !== parsed.data.scenarioId) {
+    return { error: "That email template no longer exists." };
+  }
+
+  const role = await prisma.scenarioRole.findUnique({
+    where: { id: parsed.data.roleId },
+    select: { id: true, scenarioId: true }
+  });
+
+  if (!role || role.scenarioId !== parsed.data.scenarioId) {
+    return { error: "The selected role does not belong to this scenario." };
+  }
+
+  await prisma.scenarioTemplate.update({
+    where: { id: template.id },
+    data: {
+      roleId: parsed.data.roleId,
+      subject: parsed.data.subject,
+      body: parsed.data.body,
+      bodyDirection: parsed.data.bodyDirection,
+      itemCode: parsed.data.itemCode || null,
+      schoolAnswer: parsed.data.schoolAnswer || null,
+      schoolAnswerDirection: parsed.data.schoolAnswerDirection
+    }
+  });
+
+  const files = formData
+    .getAll("attachments")
+    .filter((value): value is File => value instanceof File && value.size > 0);
+
+  if (files.length > 0) {
+    const stored = await persistFiles(files, `scenario-templates/${template.id}`);
+    await prisma.scenarioTemplateAttachment.createMany({
+      data: stored.map((file) => ({
+        templateId: template.id,
+        storageKey: file.storageKey,
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        sizeBytes: file.sizeBytes
+      }))
+    });
+  }
+
+  await writeAdminAudit("update_scenario_template", "ScenarioTemplate", template.id, {
+    scenarioId: template.scenarioId
+  });
+  revalidatePath(`/admin/scenarios/${template.scenarioId}`);
+  return { success: "Email template updated." };
+}
+
+export async function deleteScenarioTemplateAttachmentAction(
+  attachmentId: string,
+  scenarioId: string
+): Promise<ActionResult> {
+  await ensureAdmin();
+
+  const attachment = await prisma.scenarioTemplateAttachment.findUnique({
+    where: { id: attachmentId },
+    include: { template: { select: { scenarioId: true } } }
+  });
+
+  if (!attachment || attachment.template.scenarioId !== scenarioId) {
+    return { error: "Attachment not found." };
+  }
+
+  await prisma.scenarioTemplateAttachment.delete({ where: { id: attachmentId } });
+
+  await writeAdminAudit("delete_scenario_template_attachment", "ScenarioTemplateAttachment", attachmentId, {
+    scenarioId
+  });
+  revalidatePath(`/admin/scenarios/${scenarioId}`);
+  return { success: "Attachment removed." };
 }
 
 export async function deleteScenarioAction(

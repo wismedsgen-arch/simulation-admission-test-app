@@ -219,10 +219,13 @@ export default async function ScenarioDetailPage({
                 </div>
                 <ScenarioTemplateLibraryList
                   scenarioId={scenario.id}
+                  roles={scenario.roles.map((role) => ({ id: role.id, name: role.name }))}
                   templates={preloadedTemplates.map((template) => ({
                     id: template.id,
+                    roleId: template.roleId,
                     subject: template.subject,
                     body: template.body,
+                    bodyDirection: template.bodyDirection,
                     roleName: template.role.name,
                     sendOrder: template.sendOrder ?? 1,
                     itemCode: template.itemCode,
@@ -246,10 +249,13 @@ export default async function ScenarioDetailPage({
                 </div>
                 <ScenarioTemplateLibraryList
                   scenarioId={scenario.id}
+                  roles={scenario.roles.map((role) => ({ id: role.id, name: role.name }))}
                   templates={followUpTemplates.map((template) => ({
                     id: template.id,
+                    roleId: template.roleId,
                     subject: template.subject,
                     body: template.body,
+                    bodyDirection: template.bodyDirection,
                     roleName: template.role.name,
                     sendOrder: template.sendOrder,
                     itemCode: template.itemCode,
