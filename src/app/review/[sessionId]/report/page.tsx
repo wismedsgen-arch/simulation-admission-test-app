@@ -35,26 +35,53 @@ type Thread = {
   schoolAnswerDirection: string | null;
 };
 
+type ThreadType = "PRELOADED" | "FOLLOW_UP" | "PSYCHOLOGIST_INITIATED" | "CANDIDATE_INITIATED";
+type ThreadStatus = "UNANSWERED" | "ANSWERED" | "ANSWERED_EXTENDED" | "ADDRESSED" | "UNADDRESSED";
+
 type ThreadStats = {
-  studentMsgCount: number;
-  staffMsgCount: number;
-  hasStudentReply: boolean;
-  isCandidateInitiated: boolean;
-  isExtended: boolean;
+  threadType: ThreadType;
+  candidateCount: number;
+  staffSideCount: number;
+  status: ThreadStatus;
+  lastSender: "CANDIDATE" | "STAFF_SIDE";
   showFull: boolean;
 };
 
 function computeThreadStats(thread: Thread): ThreadStats {
-  const studentMsgCount = thread.messages.filter((m) => m.senderType === "STUDENT").length;
-  const staffMsgCount = thread.messages.filter((m) => m.senderType === "STAFF").length;
-  const hasStudentReply = studentMsgCount > 0;
-  const isCandidateInitiated = thread.kind === null;
-  // Extended = more back-and-forth than just root + single student reply
-  const isExtended = thread.messages.length > 2;
-  // Show full section unless it's an unanswered preloaded template email
+  const candidateCount = thread.messages.filter((m) => m.senderType === "STUDENT").length;
+  const staffSideCount = thread.messages.filter((m) => m.senderType !== "STUDENT").length;
+
+  const threadType: ThreadType =
+    thread.kind === TemplateKind.PRELOADED
+      ? "PRELOADED"
+      : thread.kind === TemplateKind.FOLLOW_UP
+        ? "FOLLOW_UP"
+        : thread.root.senderType === "STUDENT"
+          ? "CANDIDATE_INITIATED"
+          : "PSYCHOLOGIST_INITIATED";
+
+  let status: ThreadStatus;
+  if (threadType === "CANDIDATE_INITIATED") {
+    status = staffSideCount > 0 ? "ADDRESSED" : "UNADDRESSED";
+  } else if (candidateCount === 0) {
+    status = "UNANSWERED";
+  } else if (candidateCount >= 1 && staffSideCount >= 1 && (candidateCount > 1 || staffSideCount > 1)) {
+    status = "ANSWERED_EXTENDED";
+  } else {
+    status = "ANSWERED";
+  }
+
   const showFull =
-    hasStudentReply || isCandidateInitiated || thread.kind === TemplateKind.FOLLOW_UP;
-  return { studentMsgCount, staffMsgCount, hasStudentReply, isCandidateInitiated, isExtended, showFull };
+    threadType === "CANDIDATE_INITIATED" ||
+    threadType === "PSYCHOLOGIST_INITIATED" ||
+    candidateCount > 0 ||
+    staffSideCount > 1;
+
+  const lastMessage = thread.messages[thread.messages.length - 1];
+  const lastSender: "CANDIDATE" | "STAFF_SIDE" =
+    lastMessage.senderType === "STUDENT" ? "CANDIDATE" : "STAFF_SIDE";
+
+  return { threadType, candidateCount, staffSideCount, status, lastSender, showFull };
 }
 
 const printStyles = `
@@ -114,7 +141,7 @@ const printStyles = `
     border-radius: 999px;
     background: rgba(26, 115, 232, 0.1);
     color: #1a73e8;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
   }
   .report-pill-muted {
@@ -123,7 +150,7 @@ const printStyles = `
     border-radius: 999px;
     background: rgba(95, 99, 104, 0.1);
     color: #5f6368;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
   .report-pill-green {
     display: inline-block;
@@ -221,6 +248,15 @@ const printStyles = `
     color: #5f6368;
     font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
+  }
+  .report-type-label {
+    font-size: 0.8rem;
+    color: #5f6368;
+    white-space: nowrap;
+  }
+  .report-sender-label {
+    font-size: 0.82rem;
+    white-space: nowrap;
   }
 `;
 
@@ -378,25 +414,18 @@ export default async function ReviewReportPage({
                 <thead>
                   <tr>
                     <th style={{ width: 32 }}>#</th>
-                    <th style={{ width: 60 }}>Code</th>
+                    <th style={{ width: 56 }}>Code</th>
                     <th>Subject</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: "right", width: 80 }}>Candidate</th>
-                    <th style={{ textAlign: "right", width: 60 }}>Staff</th>
+                    <th style={{ width: 140 }}>Type</th>
+                    <th style={{ width: 160 }}>Status</th>
+                    <th style={{ width: 120 }}>Last sender</th>
+                    <th style={{ textAlign: "right", width: 72 }}>Candidate</th>
+                    <th style={{ textAlign: "right", width: 56 }}>Staff</th>
                   </tr>
                 </thead>
                 <tbody>
                   {threads.map((thread, i) => {
                     const stats = threadStats[i];
-                    const statusEl = stats.isCandidateInitiated ? (
-                      <span className="report-pill">Candidate-initiated</span>
-                    ) : stats.hasStudentReply ? (
-                      <span className="report-pill-green">
-                        Answered{stats.isExtended ? " · extended" : ""}
-                      </span>
-                    ) : (
-                      <span className="report-pill-muted">Unanswered</span>
-                    );
                     return (
                       <tr key={thread.rootId}>
                         <td className="report-num">{i + 1}</td>
@@ -418,12 +447,22 @@ export default async function ReviewReportPage({
                             </span>
                           )}
                         </td>
-                        <td>{statusEl}</td>
-                        <td className="report-num" style={{ textAlign: "right" }}>
-                          {stats.studentMsgCount}
+                        <td>
+                          <ThreadTypeLabel type={stats.threadType} />
+                        </td>
+                        <td>
+                          <ThreadStatusBadge status={stats.status} />
+                        </td>
+                        <td>
+                          <span className="report-sender-label" style={{ color: stats.lastSender === "CANDIDATE" ? "#2d7a47" : "#5f6368" }}>
+                            {stats.lastSender === "CANDIDATE" ? "Candidate" : "Psychologist/Staff"}
+                          </span>
                         </td>
                         <td className="report-num" style={{ textAlign: "right" }}>
-                          {stats.staffMsgCount}
+                          {stats.candidateCount}
+                        </td>
+                        <td className="report-num" style={{ textAlign: "right" }}>
+                          {stats.staffSideCount}
                         </td>
                       </tr>
                     );
@@ -448,6 +487,31 @@ export default async function ReviewReportPage({
       </div>
     </>
   );
+}
+
+function ThreadTypeLabel({ type }: { type: ThreadType }) {
+  const labels: Record<ThreadType, string> = {
+    PRELOADED: "Preloaded",
+    FOLLOW_UP: "Follow-up",
+    PSYCHOLOGIST_INITIATED: "Psych-initiated",
+    CANDIDATE_INITIATED: "Candidate-initiated"
+  };
+  return <span className="report-type-label">{labels[type]}</span>;
+}
+
+function ThreadStatusBadge({ status }: { status: ThreadStatus }) {
+  switch (status) {
+    case "ANSWERED_EXTENDED":
+      return <span className="report-pill">Answered · Extended</span>;
+    case "ANSWERED":
+      return <span className="report-pill-green">Answered</span>;
+    case "ADDRESSED":
+      return <span className="report-pill-green">Addressed</span>;
+    case "UNANSWERED":
+      return <span className="report-pill-muted">Unanswered</span>;
+    case "UNADDRESSED":
+      return <span className="report-pill-muted">Unaddressed</span>;
+  }
 }
 
 function Info({ label, value }: { label: string; value: string }) {
