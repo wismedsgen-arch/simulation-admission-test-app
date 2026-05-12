@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
 import { PsychologistShell } from "@/components/psychologist/psychologist-shell";
-import { StudentWorkspace } from "@/components/student/student-workspace";
+import { ReviewWorkspace } from "@/components/psychologist/review-workspace";
 import { requireStaff } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { expireDueSessions } from "@/lib/db/session-state";
@@ -27,7 +27,10 @@ export default async function ReviewDetailPage({
       scenario: {
         include: {
           roles: true,
-          files: true
+          files: true,
+          templates: {
+            select: { id: true, schoolAnswer: true, schoolAnswerDirection: true }
+          }
         }
       },
       messages: {
@@ -73,19 +76,10 @@ export default async function ReviewDetailPage({
         </div>
       </div>
 
-      <StudentWorkspace
-        sessionId={session.id}
+      <ReviewWorkspace
         studentName={session.cycleStudent.fullName}
-        scenarioName={session.scenario.name}
-        endsAt={session.endsAt?.toISOString() ?? null}
-        extensionMinutes={session.extensionMinutes}
-        openingTitle={session.scenario.openingTitle}
-        openingInstructions={session.scenario.openingInstructions}
-        openingInstructionsDirection={session.scenario.openingInstructionsDirection}
-        readOnly
         sessionStatus={session.status}
-        reviewMode
-        workspaceTitle="Student mailbox review"
+        startedAt={session.startedAt?.toISOString() ?? null}
         roles={session.scenario.roles.map((role) => ({
           id: role.id,
           name: role.name,
@@ -102,7 +96,6 @@ export default async function ReviewDetailPage({
           textDirection: file.textDirection,
           fileName: file.fileName
         }))}
-        draft={null}
         messages={session.messages.map((message) => ({
           id: message.id,
           senderType: message.senderType,
@@ -114,12 +107,17 @@ export default async function ReviewDetailPage({
           bodyDirection: message.bodyDirection,
           sentAt: message.sentAt.toISOString(),
           replyToId: message.replyToId,
-          deletedByStudentAt: message.deletedByStudentAt?.toISOString() ?? null,
+          templateId: message.templateId,
           attachments: message.attachments.map((attachment) => ({
             id: attachment.id,
             fileName: attachment.fileName
           }))
         }))}
+        templateSchoolAnswerMap={Object.fromEntries(
+          session.scenario.templates
+            .filter((t) => t.schoolAnswer)
+            .map((t) => [t.id, { schoolAnswer: t.schoolAnswer, schoolAnswerDirection: t.schoolAnswerDirection }])
+        )}
       />
     </div>
   );
