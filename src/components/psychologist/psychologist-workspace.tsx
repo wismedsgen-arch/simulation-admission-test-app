@@ -30,7 +30,7 @@ import {
   sendTemplateEmailAction,
   trashPsychologistMessageAction
 } from "@/lib/actions/psychologist";
-import { formatDateTime, formatRelativeTime, toDomDir, toTextAlign } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime, formatTimeOnly, toDomDir, toTextAlign } from "@/lib/utils";
 
 type Message = {
   id: string;
@@ -213,12 +213,15 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
     PSYCH_REPLY:         { label: "Psych-reply",         color: "#5f6368", bg: "rgba(95, 99, 104, 0.06)" }
   };
 
+  const gridTemplateColumns = "78px 70px 180px minmax(220px,1fr) 130px 40px";
+  const rowMinWidth = 820;
+
   return (
-    <div style={{ minWidth: 0 }}>
+    <div style={{ minWidth: 0, overflowX: "auto" }}>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "90px 70px 180px minmax(0,1fr) 130px 40px",
+          gridTemplateColumns,
           gap: "0 12px",
           padding: "8px 20px",
           borderBottom: "2px solid var(--line)",
@@ -226,7 +229,8 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.04em",
-          color: "#5f6368"
+          color: "#5f6368",
+          minWidth: rowMinWidth
         }}
       >
         <span>Time</span>
@@ -243,16 +247,17 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
             key={entry.messageId}
             style={{
               display: "grid",
-              gridTemplateColumns: "90px 70px 180px minmax(0,1fr) 130px 40px",
+              gridTemplateColumns,
               gap: "0 12px",
               padding: "11px 20px",
               borderBottom: "1px solid var(--line)",
               background: cfg.bg,
-              alignItems: "start"
+              alignItems: "start",
+              minWidth: rowMinWidth
             }}
           >
-            <span style={{ fontSize: "0.82rem", color: "#5f6368", whiteSpace: "nowrap" }}>
-              {formatDateTime(entry.sentAt)}
+            <span style={{ fontSize: "0.82rem", fontFamily: "monospace", color: "#5f6368", whiteSpace: "nowrap" }}>
+              {formatTimeOnly(entry.sentAt)}
             </span>
             <span style={{ fontSize: "0.82rem", fontFamily: "monospace", color: "#5f6368", whiteSpace: "nowrap" }}>
               {formatDuration(entry.relativeMs)}

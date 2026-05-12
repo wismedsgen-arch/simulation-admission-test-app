@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { expireDueSessions } from "@/lib/db/session-state";
-import { formatDateTime, toDomDir, toTextAlign } from "@/lib/utils";
+import { formatDateTime, formatTimeOnly, toDomDir, toTextAlign } from "@/lib/utils";
 
 import { PrintButton } from "./print-button";
 
@@ -244,8 +244,13 @@ const printStyles = `
     text-decoration: none;
   }
   .report-toc-link:hover { text-decoration: underline; }
+  .report-timeline-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .report-timeline-table {
     width: 100%;
+    min-width: 760px;
     border-collapse: collapse;
     font-size: 0.85rem;
   }
@@ -559,47 +564,49 @@ export default async function ReviewReportPage({
           <>
             <section>
               <p className="report-toc-heading">Session timeline</p>
-              <table className="report-timeline-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 90 }}>Time</th>
-                    <th style={{ width: 70 }}>+Elapsed</th>
-                    <th style={{ width: 170 }}>From → To</th>
-                    <th>Subject</th>
-                    <th style={{ width: 150 }}>Type</th>
-                    <th style={{ width: 36, textAlign: "right" }}>#</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {timelineMessages.map((msg) => {
-                    const isCandidate = tlIsCandidate(msg);
-                    const entryType = tlEntryType(msg);
-                    const pillClass = isCandidate
-                      ? "report-timeline-pill report-timeline-pill--candidate"
-                      : msg.templateId
-                        ? "report-timeline-pill report-timeline-pill--followup"
-                        : "report-timeline-pill report-timeline-pill--psych";
-                    const rootId = findRootId(msg.id);
-                    const rootMsg = messagesById.get(rootId);
-                    const elapsed = tlFormatDuration(msg.sentAt.getTime() - sessionStartMs);
-                    return (
-                      <tr key={msg.id} className={isCandidate ? "report-timeline-row--candidate" : ""}>
-                        <td className="report-num" style={{ whiteSpace: "nowrap" }}>{formatDateTime(msg.sentAt)}</td>
-                        <td style={{ fontFamily: "monospace", color: "#5f6368" }}>{elapsed}</td>
-                        <td>
-                          <div style={{ fontWeight: 600, fontSize: "0.82rem" }}>{msg.senderDisplayName}</div>
-                          <div style={{ color: "#5f6368", fontSize: "0.82rem" }}>→ {msg.recipientName}</div>
-                        </td>
-                        <td>{rootMsg?.subject ?? msg.subject}</td>
-                        <td><span className={pillClass}>{entryType}</span></td>
-                        <td className="report-num" style={{ textAlign: "right" }}>
-                          #{tlThreadIndex.get(msg.id) ?? 1}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="report-timeline-scroll">
+                <table className="report-timeline-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 80 }}>Time</th>
+                      <th style={{ width: 70 }}>+Elapsed</th>
+                      <th style={{ width: 170 }}>From → To</th>
+                      <th>Subject</th>
+                      <th style={{ width: 150 }}>Type</th>
+                      <th style={{ width: 36, textAlign: "right" }}>#</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timelineMessages.map((msg) => {
+                      const isCandidate = tlIsCandidate(msg);
+                      const entryType = tlEntryType(msg);
+                      const pillClass = isCandidate
+                        ? "report-timeline-pill report-timeline-pill--candidate"
+                        : msg.templateId
+                          ? "report-timeline-pill report-timeline-pill--followup"
+                          : "report-timeline-pill report-timeline-pill--psych";
+                      const rootId = findRootId(msg.id);
+                      const rootMsg = messagesById.get(rootId);
+                      const elapsed = tlFormatDuration(msg.sentAt.getTime() - sessionStartMs);
+                      return (
+                        <tr key={msg.id} className={isCandidate ? "report-timeline-row--candidate" : ""}>
+                          <td className="report-num" style={{ whiteSpace: "nowrap", fontFamily: "monospace" }}>{formatTimeOnly(msg.sentAt)}</td>
+                          <td style={{ fontFamily: "monospace", color: "#5f6368" }}>{elapsed}</td>
+                          <td>
+                            <div style={{ fontWeight: 600, fontSize: "0.82rem" }}>{msg.senderDisplayName}</div>
+                            <div style={{ color: "#5f6368", fontSize: "0.82rem" }}>→ {msg.recipientName}</div>
+                          </td>
+                          <td>{rootMsg?.subject ?? msg.subject}</td>
+                          <td><span className={pillClass}>{entryType}</span></td>
+                          <td className="report-num" style={{ textAlign: "right" }}>
+                            #{tlThreadIndex.get(msg.id) ?? 1}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </section>
             <div className="report-divider" />
           </>

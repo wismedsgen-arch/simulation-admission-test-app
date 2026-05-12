@@ -14,6 +14,15 @@ export function formatDateTime(value?: Date | string | null) {
   return format(date, "PPP p");
 }
 
+export function formatTimeOnly(value?: Date | string | null) {
+  if (!value) {
+    return "--:--:--";
+  }
+
+  const date = typeof value === "string" ? new Date(value) : value;
+  return format(date, "HH:mm:ss");
+}
+
 export function formatRelativeTime(value?: Date | string | null) {
   if (!value) {
     return "just now";
