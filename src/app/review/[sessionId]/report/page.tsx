@@ -531,7 +531,9 @@ function ReportThreadSection({ index, thread }: { index: number; thread: Thread 
         ? "Preloaded item"
         : thread.kind === TemplateKind.FOLLOW_UP
           ? "Pre-built follow-up"
-          : "Candidate-initiated thread";
+          : thread.root.senderType === "STUDENT"
+            ? "Candidate-initiated thread"
+            : "Psychologist-initiated thread";
 
   const itemCodePrefix = thread.itemCode ? `[${thread.itemCode}] ` : "";
 
