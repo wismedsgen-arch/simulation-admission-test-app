@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   CheckCheck,
@@ -202,6 +202,7 @@ export function PsychologistWorkspace({
   const [composeBodyDirection, setComposeBodyDirection] = useState<"AUTO" | "LTR" | "RTL">("AUTO");
   const [replyBodyDirection, setReplyBodyDirection] = useState<"AUTO" | "LTR" | "RTL">("AUTO");
   const [state, formAction] = useActionState<ActionResult, FormData>(psychologistSendMessageAction, {});
+  const replyFormRef = useRef<HTMLFormElement>(null);
   const [templateState, templateAction] = useActionState<ActionResult, FormData>(sendTemplateEmailAction, {});
 
   const visibleMessages = mailbox === "inbox" ? inboxMessages : mailbox === "sent" ? sentMessages : trashedMessages;
@@ -260,7 +261,7 @@ export function PsychologistWorkspace({
     setMailbox("inbox");
     setToast("Mail sent");
     router.refresh();
-  }, [router, state.success]);
+  }, [router, state]);
 
   useEffect(() => {
     if (!templateState.success) {
@@ -281,6 +282,12 @@ export function PsychologistWorkspace({
     const timeout = window.setTimeout(() => setToast(null), 2400);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    if (replyOpen) {
+      replyFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [replyOpen]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -638,7 +645,8 @@ export function PsychologistWorkspace({
                           className="panel"
                           style={{
                             padding: 24,
-                            minHeight: "max(220px, calc(100vh - 560px))",
+                            flex: selectedThread.length === 1 ? 1 : undefined,
+                            minHeight: selectedThread.length === 1 ? "max(220px, calc(100vh - 560px))" : undefined,
                             borderColor:
                               message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
                                 ? "rgba(217, 48, 37, 0.18)"
@@ -695,7 +703,16 @@ export function PsychologistWorkspace({
                     </div>
 
                     {replyOpen && selectedMessage.senderType === "STUDENT" && mailbox !== "trash" ? (
-                      <form action={formAction} className="stack-md">
+                      <form
+                        ref={replyFormRef}
+                        action={formAction}
+                        className="stack-md"
+                        onSubmit={(e) => {
+                          if (!window.confirm("Send this reply?")) {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
                         {state.error ? (
                           <div className="panel" style={{ padding: 14, color: "#d93025", background: "#fff6f5" }}>
                             {state.error}
@@ -823,6 +840,7 @@ export function PsychologistWorkspace({
                             onClick={() => {
                               setSelectedMessageId(message.id);
                               setReplyOpen(false);
+                              setReplyBody("");
                               setView("read");
                             }}
                             style={{
