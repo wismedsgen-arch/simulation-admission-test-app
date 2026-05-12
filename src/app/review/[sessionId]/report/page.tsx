@@ -244,6 +244,39 @@ const printStyles = `
     text-decoration: none;
   }
   .report-toc-link:hover { text-decoration: underline; }
+  .report-timeline-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .report-timeline-table th {
+    text-align: left;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #5f6368;
+    border-bottom: 2px solid rgba(95, 99, 104, 0.16);
+    white-space: nowrap;
+  }
+  .report-timeline-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(95, 99, 104, 0.08);
+    vertical-align: top;
+  }
+  .report-timeline-table tr:last-child td { border-bottom: none; }
+  .report-timeline-row--candidate { background: rgba(52, 168, 83, 0.05); }
+  .report-timeline-pill {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .report-timeline-pill--candidate { color: #2d7a47; background: rgba(52,168,83,0.12); }
+  .report-timeline-pill--followup  { color: #1a73e8; background: rgba(26,115,232,0.12); }
+  .report-timeline-pill--psych     { color: #5f6368; background: rgba(95,99,104,0.12); }
   .report-num {
     color: #5f6368;
     font-size: 0.85rem;
@@ -355,6 +388,47 @@ export default async function ReviewReportPage({
   const studentMessageCount = session.messages.filter((message) => message.senderType === "STUDENT").length;
   const psychologistMessageCount = session.messages.filter((message) => message.senderType === "STAFF").length;
   const attachmentCount = session.messages.reduce((sum, message) => sum + message.attachments.length, 0);
+
+  // Candidate global sequence numbers
+  const candidateSequence = new Map(
+    session.messages
+      .filter((m) => m.senderType === "STUDENT")
+      .sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime())
+      .map((m, i) => [m.id, i + 1])
+  );
+
+  // Timeline entries (non-SYSTEM, sorted ascending)
+  const timelineMessages = session.messages
+    .filter((m) => m.senderType !== "SYSTEM")
+    .sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
+
+  const tlThreadCount = new Map<string, number>();
+  const tlThreadIndex = new Map<string, number>();
+  for (const msg of timelineMessages) {
+    const rootId = findRootId(msg.id);
+    const count = (tlThreadCount.get(rootId) ?? 0) + 1;
+    tlThreadCount.set(rootId, count);
+    tlThreadIndex.set(msg.id, count);
+  }
+
+  const sessionStartMs = session.startedAt ? session.startedAt.getTime() : (timelineMessages[0]?.sentAt.getTime() ?? 0);
+
+  function tlEntryType(msg: (typeof timelineMessages)[0]): string {
+    if (msg.senderType === "STUDENT") return msg.replyToId ? "Candidate-reply" : "Candidate-initiated";
+    if (msg.templateId) return "Follow-up";
+    return msg.replyToId ? "Psych-reply" : "Psych-initiated";
+  }
+
+  function tlFormatDuration(ms: number) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `+${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function tlIsCandidate(msg: (typeof timelineMessages)[0]) {
+    return msg.senderType === "STUDENT";
+  }
 
   return (
     <>
@@ -474,13 +548,63 @@ export default async function ReviewReportPage({
           </>
         ) : null}
 
+        {timelineMessages.length > 0 ? (
+          <>
+            <section>
+              <p className="report-toc-heading">Session timeline</p>
+              <table className="report-timeline-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 90 }}>Time</th>
+                    <th style={{ width: 70 }}>+Elapsed</th>
+                    <th style={{ width: 170 }}>From → To</th>
+                    <th>Subject</th>
+                    <th style={{ width: 150 }}>Type</th>
+                    <th style={{ width: 36, textAlign: "right" }}>#</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timelineMessages.map((msg) => {
+                    const isCandidate = tlIsCandidate(msg);
+                    const entryType = tlEntryType(msg);
+                    const pillClass = isCandidate
+                      ? "report-timeline-pill report-timeline-pill--candidate"
+                      : msg.templateId
+                        ? "report-timeline-pill report-timeline-pill--followup"
+                        : "report-timeline-pill report-timeline-pill--psych";
+                    const rootId = findRootId(msg.id);
+                    const rootMsg = messagesById.get(rootId);
+                    const elapsed = tlFormatDuration(msg.sentAt.getTime() - sessionStartMs);
+                    return (
+                      <tr key={msg.id} className={isCandidate ? "report-timeline-row--candidate" : ""}>
+                        <td className="report-num" style={{ whiteSpace: "nowrap" }}>{formatDateTime(msg.sentAt)}</td>
+                        <td style={{ fontFamily: "monospace", color: "#5f6368" }}>{elapsed}</td>
+                        <td>
+                          <div style={{ fontWeight: 600, fontSize: "0.82rem" }}>{msg.senderDisplayName}</div>
+                          <div style={{ color: "#5f6368", fontSize: "0.82rem" }}>→ {msg.recipientName}</div>
+                        </td>
+                        <td>{rootMsg?.subject ?? msg.subject}</td>
+                        <td><span className={pillClass}>{entryType}</span></td>
+                        <td className="report-num" style={{ textAlign: "right" }}>
+                          #{tlThreadIndex.get(msg.id) ?? 1}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </section>
+            <div className="report-divider" />
+          </>
+        ) : null}
+
         {threads.length === 0 ? (
           <p>No emails were exchanged in this session.</p>
         ) : (
           threads.map((thread, i) => {
             if (!threadStats[i].showFull) return null;
             return (
-              <ReportThreadSection key={thread.rootId} index={i + 1} thread={thread} />
+              <ReportThreadSection key={thread.rootId} index={i + 1} thread={thread} candidateSequence={candidateSequence} />
             );
           })
         )}
@@ -523,7 +647,7 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ReportThreadSection({ index, thread }: { index: number; thread: Thread }) {
+function ReportThreadSection({ index, thread, candidateSequence }: { index: number; thread: Thread; candidateSequence: Map<string, number> }) {
   const itemLabel =
     thread.kind === TemplateKind.PRELOADED && thread.sendOrder
       ? `Item ${thread.sendOrder} · preloaded`
@@ -570,16 +694,16 @@ function ReportThreadSection({ index, thread }: { index: number; thread: Thread 
       ) : null}
 
       {thread.messages.map((message) => (
-        <ReportMessageBlock key={message.id} message={message} />
+        <ReportMessageBlock key={message.id} message={message} candidateN={candidateSequence.get(message.id)} />
       ))}
     </section>
   );
 }
 
-function ReportMessageBlock({ message }: { message: ReportMessage }) {
+function ReportMessageBlock({ message, candidateN }: { message: ReportMessage; candidateN?: number }) {
   const isStudent = message.senderType === "STUDENT";
   const senderLabel = isStudent
-    ? "Candidate"
+    ? candidateN !== undefined ? `Candidate reply #${candidateN}` : "Candidate"
     : message.senderType === "STAFF"
       ? "Psychologist (in role)"
       : "Scenario system";
