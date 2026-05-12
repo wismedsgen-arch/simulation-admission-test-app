@@ -11,3 +11,9 @@ testing
 .env.*
 !.env.example
 .claude/
+
+# TypeScript incremental build cache — regenerates on every tsc run
+tsconfig.tsbuildinfo
+
+# Local-only helper scripts (one-offs, not required to run the app)
+scripts/
