@@ -19,9 +19,9 @@ const claimedSessionDeskInclude = Prisma.validator<Prisma.ExamCycleStudentInclud
           roles: true,
           files: true,
           templates: {
-            where: { kind: "FOLLOW_UP", isEnabled: true },
+            where: { isEnabled: true },
             include: { role: true },
-            orderBy: { createdAt: "asc" }
+            orderBy: { sendOrder: "asc" }
           }
         }
       }

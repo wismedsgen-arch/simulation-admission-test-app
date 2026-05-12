@@ -42,6 +42,7 @@ type Message = {
   bodyDirection: string | null;
   sentAt: string;
   replyToId: string | null;
+  templateId: string | null;
   requiresResponse: boolean;
   resolvedAt: string | null;
   deletedByStaffAt: string | null;
@@ -85,7 +86,19 @@ type ActionResult = {
 };
 
 type WorkspaceView = "list" | "read" | "compose";
-type Mailbox = "inbox" | "sent" | "trash" | "files";
+type Mailbox = "inbox" | "sent" | "trash" | "files" | "timeline";
+
+type TimelineEntry = {
+  messageId: string;
+  sentAt: string;
+  relativeMs: number;
+  senderType: string;
+  senderDisplayName: string;
+  recipientName: string;
+  subject: string;
+  threadIndex: number;
+  entryType: "CANDIDATE_INITIATED" | "CANDIDATE_REPLY" | "FOLLOW_UP" | "PSYCH_INITIATED" | "PSYCH_REPLY";
+};
 
 function getRootId(messageId: string, byId: Map<string, Message>) {
   let current = byId.get(messageId);
@@ -95,6 +108,13 @@ function getRootId(messageId: string, byId: Map<string, Message>) {
   }
 
   return current?.id ?? messageId;
+}
+
+function formatDuration(ms: number) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `+${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function PsychologistRowActions({
@@ -136,12 +156,149 @@ function PsychologistRowActions({
   );
 }
 
+function SchoolAnswerPanel({ schoolAnswer, schoolAnswerDirection }: { schoolAnswer: string; schoolAnswerDirection: string | null }) {
+  return (
+    <div
+      style={{
+        padding: "16px 20px",
+        background: "rgba(26, 115, 232, 0.05)",
+        borderLeft: "3px solid rgba(26, 115, 232, 0.35)",
+        borderRadius: "0 8px 8px 0",
+        height: "100%",
+        boxSizing: "border-box"
+      }}
+    >
+      <div
+        style={{
+          fontSize: "0.72rem",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "#1a73e8",
+          marginBottom: 10
+        }}
+      >
+        School answer &amp; evaluation criteria
+      </div>
+      <div
+        dir={toDomDir(schoolAnswerDirection)}
+        style={{
+          whiteSpace: "pre-wrap",
+          lineHeight: 1.7,
+          textAlign: toTextAlign(schoolAnswerDirection),
+          color: "#202124"
+        }}
+      >
+        {schoolAnswer}
+      </div>
+    </div>
+  );
+}
+
+function TimelineView({ entries }: { entries: TimelineEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <div className="panel" style={{ margin: 22, padding: 22 }}>
+        No session activity recorded yet.
+      </div>
+    );
+  }
+
+  const typeConfig: Record<TimelineEntry["entryType"], { label: string; color: string; bg: string }> = {
+    CANDIDATE_INITIATED: { label: "Candidate-initiated", color: "#2d7a47", bg: "rgba(52, 168, 83, 0.08)" },
+    CANDIDATE_REPLY:     { label: "Candidate-reply",     color: "#2d7a47", bg: "rgba(52, 168, 83, 0.08)" },
+    FOLLOW_UP:           { label: "Follow-up",           color: "#1a73e8", bg: "rgba(26, 115, 232, 0.06)" },
+    PSYCH_INITIATED:     { label: "Psych-initiated",     color: "#5f6368", bg: "rgba(95, 99, 104, 0.06)" },
+    PSYCH_REPLY:         { label: "Psych-reply",         color: "#5f6368", bg: "rgba(95, 99, 104, 0.06)" }
+  };
+
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "90px 70px 180px minmax(0,1fr) 130px 40px",
+          gap: "0 12px",
+          padding: "8px 20px",
+          borderBottom: "2px solid var(--line)",
+          fontSize: "0.74rem",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          color: "#5f6368"
+        }}
+      >
+        <span>Time</span>
+        <span>+Elapsed</span>
+        <span>From → To</span>
+        <span>Subject</span>
+        <span>Type</span>
+        <span style={{ textAlign: "right" }}>#</span>
+      </div>
+      {entries.map((entry) => {
+        const cfg = typeConfig[entry.entryType];
+        return (
+          <div
+            key={entry.messageId}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "90px 70px 180px minmax(0,1fr) 130px 40px",
+              gap: "0 12px",
+              padding: "11px 20px",
+              borderBottom: "1px solid var(--line)",
+              background: cfg.bg,
+              alignItems: "start"
+            }}
+          >
+            <span style={{ fontSize: "0.82rem", color: "#5f6368", whiteSpace: "nowrap" }}>
+              {formatDateTime(entry.sentAt)}
+            </span>
+            <span style={{ fontSize: "0.82rem", fontFamily: "monospace", color: "#5f6368", whiteSpace: "nowrap" }}>
+              {formatDuration(entry.relativeMs)}
+            </span>
+            <div style={{ fontSize: "0.82rem", minWidth: 0 }}>
+              <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {entry.senderDisplayName}
+              </div>
+              <div style={{ color: "#5f6368", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                → {entry.recipientName}
+              </div>
+            </div>
+            <div style={{ fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+              {entry.subject}
+            </div>
+            <div>
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  color: cfg.color,
+                  background: cfg.color === "#2d7a47" ? "rgba(52,168,83,0.13)" : cfg.color === "#1a73e8" ? "rgba(26,115,232,0.12)" : "rgba(95,99,104,0.12)"
+                }}
+              >
+                {cfg.label}
+              </span>
+            </div>
+            <span style={{ fontSize: "0.85rem", color: "#5f6368", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+              #{entry.threadIndex}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PsychologistWorkspace({
   sessionId,
   studentName,
   sessionStatus,
   endsAt,
   extensionMinutes,
+  startedAt,
   openingTitle,
   openingInstructions,
   openingInstructionsDirection,
@@ -151,6 +308,7 @@ export function PsychologistWorkspace({
   roles,
   files,
   templates,
+  templateSchoolAnswerMap,
   draft
 }: {
   sessionId: string;
@@ -158,6 +316,7 @@ export function PsychologistWorkspace({
   sessionStatus: string;
   endsAt?: string | null;
   extensionMinutes?: number;
+  startedAt?: string | null;
   openingTitle: string;
   openingInstructions: string;
   openingInstructionsDirection?: string | null;
@@ -167,6 +326,7 @@ export function PsychologistWorkspace({
   roles: Role[];
   files: ScenarioFile[];
   templates: Template[];
+  templateSchoolAnswerMap?: Record<string, { schoolAnswer: string | null; schoolAnswerDirection: string | null }>;
   draft?: Draft | null;
 }) {
   const router = useRouter();
@@ -226,10 +386,70 @@ export function PsychologistWorkspace({
       .filter((message) => getRootId(message.id, messageById) === rootId)
       .sort((left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime());
   }, [messageById, messages, selectedMessage]);
+
   const selectedFile = useMemo(
     () => files.find((file) => file.id === selectedFileId) ?? files[0] ?? null,
     [files, selectedFileId]
   );
+
+  // School answer for the selected thread
+  const threadSchoolAnswer = useMemo(() => {
+    if (!templateSchoolAnswerMap || selectedThread.length === 0) return null;
+    const root = selectedThread[0];
+    if (!root.templateId) return null;
+    const entry = templateSchoolAnswerMap[root.templateId];
+    if (!entry?.schoolAnswer) return null;
+    return entry;
+  }, [selectedThread, templateSchoolAnswerMap]);
+
+  // Timeline entries: all non-SYSTEM messages sorted by sentAt
+  const timelineEntries = useMemo<TimelineEntry[]>(() => {
+    const nonSystem = messages.filter((m) => m.senderType !== "SYSTEM");
+    const sorted = [...nonSystem].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+
+    // Build thread index per message (position within its thread among non-SYSTEM)
+    const threadMessageCount = new Map<string, number>();
+    const threadMessageIndex = new Map<string, number>();
+    for (const msg of sorted) {
+      const rootId = getRootId(msg.id, messageById);
+      const count = (threadMessageCount.get(rootId) ?? 0) + 1;
+      threadMessageCount.set(rootId, count);
+      threadMessageIndex.set(msg.id, count);
+    }
+
+    const startMs = startedAt ? new Date(startedAt).getTime() : (sorted[0] ? new Date(sorted[0].sentAt).getTime() : 0);
+
+    return sorted.map((msg) => {
+      const rootId = getRootId(msg.id, messageById);
+      const root = messageById.get(rootId);
+      const isCandidate = msg.senderType === "STUDENT";
+      const isReply = Boolean(msg.replyToId);
+      const hasTemplate = Boolean(msg.templateId);
+
+      let entryType: TimelineEntry["entryType"];
+      if (isCandidate) {
+        entryType = isReply ? "CANDIDATE_REPLY" : "CANDIDATE_INITIATED";
+      } else if (hasTemplate) {
+        entryType = "FOLLOW_UP";
+      } else if (isReply) {
+        entryType = "PSYCH_REPLY";
+      } else {
+        entryType = "PSYCH_INITIATED";
+      }
+
+      return {
+        messageId: msg.id,
+        sentAt: msg.sentAt,
+        relativeMs: new Date(msg.sentAt).getTime() - startMs,
+        senderType: msg.senderType,
+        senderDisplayName: msg.senderDisplayName,
+        recipientName: msg.recipientName,
+        subject: root?.subject ?? msg.subject,
+        threadIndex: threadMessageIndex.get(msg.id) ?? 1,
+        entryType
+      };
+    });
+  }, [messages, messageById, startedAt]);
 
   useEffect(() => {
     if (selectedMessageId && messageById.has(selectedMessageId)) {
@@ -384,18 +604,19 @@ export function PsychologistWorkspace({
               </button>
 
               <div className="stack-sm">
-                {[
-                  { key: "inbox", label: `Inbox ${inboxMessages.length}` },
-                  { key: "sent", label: `Sent ${sentMessages.length}` },
-                  { key: "trash", label: `Trash ${trashedMessages.length}` },
-                  { key: "files", label: `Files ${files.length}` }
-                ].map((item) => (
+                {([
+                  { key: "inbox",    label: `Inbox ${inboxMessages.length}` },
+                  { key: "sent",     label: `Sent ${sentMessages.length}` },
+                  { key: "trash",    label: `Trash ${trashedMessages.length}` },
+                  { key: "files",    label: `Files ${files.length}` },
+                  { key: "timeline", label: "Timeline" }
+                ] as { key: Mailbox; label: string }[]).map((item) => (
                   <button
                     key={item.key}
                     type="button"
                     className="btn"
                     onClick={() => {
-                      setMailbox(item.key as Mailbox);
+                      setMailbox(item.key);
                       setView("list");
                       setReplyOpen(false);
                     }}
@@ -473,12 +694,14 @@ export function PsychologistWorkspace({
           <section style={{ display: "grid", gridTemplateRows: "auto 1fr", minWidth: 0 }}>
             <div style={{ padding: 14, borderBottom: "1px solid var(--line)" }}>
               <div className="chip">
-                {mailbox === "inbox" ? "Inbox" : mailbox === "sent" ? "Sent" : mailbox === "trash" ? "Trash" : "Files"}
+                {mailbox === "inbox" ? "Inbox" : mailbox === "sent" ? "Sent" : mailbox === "trash" ? "Trash" : mailbox === "files" ? "Files" : "Timeline"}
               </div>
             </div>
 
             <div style={{ minWidth: 0, overflow: "auto", minHeight: 0 }}>
-              {view === "compose" ? (
+              {mailbox === "timeline" ? (
+                <TimelineView entries={timelineEntries} />
+              ) : view === "compose" ? (
                 <div style={{ padding: "28px clamp(18px, 3vw, 40px)", minHeight: "100%" }}>
                   <div className="stack-md" style={{ width: "100%", maxWidth: 1240, margin: "0 auto" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
@@ -652,70 +875,11 @@ export function PsychologistWorkspace({
                       </div>
                     </div>
 
-                    <div className="stack-md" style={{ minWidth: 0 }}>
-                      {selectedThread.map((message) => (
-                        <article
-                          key={message.id}
-                          className="panel"
-                          style={{
-                            padding: 24,
-                            minWidth: 0,
-                            overflowX: "auto",
-                            borderColor:
-                              message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
-                                ? "rgba(217, 48, 37, 0.18)"
-                                : undefined,
-                            background:
-                              message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
-                                ? "linear-gradient(180deg, #fff9f8 0%, #ffffff 100%)"
-                                : undefined
-                          }}
-                        >
-                          <div className="stack-sm">
-                            <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-                              <div>
-                                <h2 style={{ margin: 0 }}>{message.subject}</h2>
-                                <p className="muted" style={{ margin: "8px 0 0" }}>
-                                  <strong>From:</strong> {message.senderDisplayName} <strong style={{ marginLeft: 8 }}>To:</strong> {message.recipientName}
-                                </p>
-                              </div>
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                                {message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt ? (
-                                  <span className="chip" style={{ color: "var(--red)", background: "#fff1f0" }}>
-                                    Needs response
-                                  </span>
-                                ) : null}
-                                {message.senderType === "STUDENT" && message.resolvedAt ? (
-                                  <span className="chip">Handled</span>
-                                ) : null}
-                                <div className="chip">{formatDateTime(message.sentAt)}</div>
-                              </div>
-                            </div>
-                            <div
-                              dir={toDomDir(message.bodyDirection)}
-                              style={{
-                                whiteSpace: "pre-wrap",
-                                lineHeight: 1.75,
-                                textAlign: toTextAlign(message.bodyDirection),
-                                overflowWrap: "break-word"
-                              }}
-                            >
-                              {message.body}
-                            </div>
-                            {message.attachments.length > 0 ? (
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                {message.attachments.map((attachment) => (
-                                  <a key={attachment.id} href={`/api/attachments/${attachment.id}`} className="chip" download>
-                                    <Paperclip size={14} />
-                                    {attachment.fileName}
-                                  </a>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        </article>
-                      ))}
-                    </div>
+                    {/* Thread messages with school answer paired beside first student reply */}
+                    <ThreadWithSchoolAnswer
+                      thread={selectedThread}
+                      schoolAnswer={threadSchoolAnswer}
+                    />
 
                     {replyOpen && selectedMessage.senderType === "STUDENT" && mailbox !== "trash" ? (
                       <form
@@ -962,5 +1126,113 @@ export function PsychologistWorkspace({
         </div>
       ) : null}
     </>
+  );
+}
+
+function MessageCard({ message, narrow }: { message: Message; narrow?: boolean }) {
+  return (
+    <article
+      className="panel"
+      style={{
+        padding: 24,
+        minWidth: 0,
+        overflowX: "auto",
+        maxWidth: narrow ? undefined : 740,
+        margin: narrow ? undefined : "0 auto",
+        width: "100%",
+        boxSizing: "border-box",
+        borderColor:
+          message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
+            ? "rgba(217, 48, 37, 0.18)"
+            : undefined,
+        background:
+          message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
+            ? "linear-gradient(180deg, #fff9f8 0%, #ffffff 100%)"
+            : undefined
+      }}
+    >
+      <div className="stack-sm">
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <h2 style={{ margin: 0 }}>{message.subject}</h2>
+            <p className="muted" style={{ margin: "8px 0 0" }}>
+              <strong>From:</strong> {message.senderDisplayName} <strong style={{ marginLeft: 8 }}>To:</strong> {message.recipientName}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt ? (
+              <span className="chip" style={{ color: "var(--red)", background: "#fff1f0" }}>
+                Needs response
+              </span>
+            ) : null}
+            {message.senderType === "STUDENT" && message.resolvedAt ? (
+              <span className="chip">Handled</span>
+            ) : null}
+            <div className="chip">{formatDateTime(message.sentAt)}</div>
+          </div>
+        </div>
+        <div
+          dir={toDomDir(message.bodyDirection)}
+          style={{
+            whiteSpace: "pre-wrap",
+            lineHeight: 1.75,
+            textAlign: toTextAlign(message.bodyDirection),
+            overflowWrap: "break-word"
+          }}
+        >
+          {message.body}
+        </div>
+        {message.attachments.length > 0 ? (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {message.attachments.map((attachment) => (
+              <a key={attachment.id} href={`/api/attachments/${attachment.id}`} className="chip" download>
+                <Paperclip size={14} />
+                {attachment.fileName}
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ThreadWithSchoolAnswer({
+  thread,
+  schoolAnswer
+}: {
+  thread: Message[];
+  schoolAnswer: { schoolAnswer: string | null; schoolAnswerDirection: string | null } | null;
+}) {
+  const firstStudentIdx = thread.findIndex((m) => m.senderType === "STUDENT");
+  const hasPairing = Boolean(schoolAnswer?.schoolAnswer) && firstStudentIdx !== -1;
+
+  return (
+    <div className="stack-md" style={{ minWidth: 0 }}>
+      {thread.map((message, idx) => {
+        if (hasPairing && idx === firstStudentIdx) {
+          // Two-column row: fills maxWidth 1240 container (~1.68x the 740px single-message width)
+          return (
+            <div
+              key={message.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 16,
+                alignItems: "stretch"
+              }}
+            >
+              <MessageCard message={message} narrow />
+              <SchoolAnswerPanel
+                schoolAnswer={schoolAnswer!.schoolAnswer!}
+                schoolAnswerDirection={schoolAnswer!.schoolAnswerDirection ?? null}
+              />
+            </div>
+          );
+        }
+
+        return <MessageCard key={message.id} message={message} narrow={hasPairing} />;
+      })}
+    </div>
   );
 }

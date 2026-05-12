@@ -24,6 +24,7 @@ type SessionDeskStudent = {
     status: string;
     endsAt: string | null;
     extensionMinutes: number;
+    startedAt: string | null;
     openingTitle: string;
     openingInstructions: string;
     openingInstructionsDirection?: string | null;
@@ -45,6 +46,7 @@ type SessionDeskStudent = {
       bodyDirection: string | null;
       sentAt: string;
       replyToId: string | null;
+      templateId: string | null;
       requiresResponse: boolean;
       resolvedAt: string | null;
       deletedByStaffAt: string | null;
@@ -75,6 +77,7 @@ type SessionDeskStudent = {
     body: string;
     roleName: string;
   }>;
+  templateSchoolAnswerMap: Record<string, { schoolAnswer: string | null; schoolAnswerDirection: string | null }>;
 };
 
 export function PsychologistSessionDesk({
@@ -296,6 +299,7 @@ export function PsychologistSessionDesk({
             sessionStatus={activeStudent.session.status}
             endsAt={activeStudent.session.endsAt}
             extensionMinutes={activeStudent.session.extensionMinutes}
+            startedAt={activeStudent.session.startedAt}
             openingTitle={activeStudent.session.openingTitle}
             openingInstructions={activeStudent.session.openingInstructions}
             openingInstructionsDirection={activeStudent.session.openingInstructionsDirection}
@@ -306,6 +310,7 @@ export function PsychologistSessionDesk({
             files={activeStudent.files}
             templates={activeStudent.templates}
             messages={activeStudent.session.messages}
+            templateSchoolAnswerMap={activeStudent.templateSchoolAnswerMap}
           />
         )}
       </div>

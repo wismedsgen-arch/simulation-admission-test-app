@@ -54,6 +54,15 @@ export default async function PsychologistSessionsPage({
                 .map((message) => message.templateId as string)
             );
 
+            const templateSchoolAnswerMap: Record<string, { schoolAnswer: string | null; schoolAnswerDirection: string | null }> =
+              Object.fromEntries(
+                student.examCycle.scenario.templates
+                  .filter((template) => template.schoolAnswer)
+                  .map((template) => [template.id, { schoolAnswer: template.schoolAnswer, schoolAnswerDirection: template.schoolAnswerDirection }])
+              );
+
+            const sessionStartedAt = student.session!.startedAt?.toISOString() ?? null;
+
             return {
               id: student.id,
               fullName: student.fullName,
@@ -68,6 +77,7 @@ export default async function PsychologistSessionsPage({
                 status: student.session!.status,
                 endsAt: student.session!.endsAt?.toISOString() ?? null,
                 extensionMinutes: student.session!.extensionMinutes,
+                startedAt: sessionStartedAt,
                 openingTitle: student.examCycle.scenario.openingTitle,
                 openingInstructions: student.examCycle.scenario.openingInstructions,
                 openingInstructionsDirection: student.examCycle.scenario.openingInstructionsDirection,
@@ -91,6 +101,7 @@ export default async function PsychologistSessionsPage({
                   bodyDirection: message.bodyDirection,
                   sentAt: message.sentAt.toISOString(),
                   replyToId: message.replyToId,
+                  templateId: message.templateId,
                   requiresResponse: message.requiresResponse,
                   resolvedAt: message.resolvedAt?.toISOString() ?? null,
                   deletedByStaffAt: message.deletedByStaffAt?.toISOString() ?? null,
@@ -117,13 +128,14 @@ export default async function PsychologistSessionsPage({
                 fileName: file.fileName
               })),
               templates: student.examCycle.scenario.templates
-                .filter((template) => !usedTemplateIds.has(template.id))
+                .filter((template) => template.kind === "FOLLOW_UP" && !usedTemplateIds.has(template.id))
                 .map((template) => ({
                   id: template.id,
                   subject: template.subject,
                   body: template.body,
                   roleName: template.role.name
-                }))
+                })),
+              templateSchoolAnswerMap
             };
           })}
         />
