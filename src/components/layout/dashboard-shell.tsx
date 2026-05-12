@@ -1,15 +1,9 @@
-import Link from "next/link";
 import { type ReactNode } from "react";
 import { Landmark, Sparkles } from "lucide-react";
 
 import { AppLogo } from "@/components/shared/app-logo";
 import { SignOutButton } from "@/components/shared/sign-out-button";
-
-type NavItem = {
-  href: string;
-  label: string;
-  active?: boolean;
-};
+import { DashboardSidebar, type DashboardNavItem } from "@/components/layout/dashboard-sidebar";
 
 export function DashboardShell({
   title,
@@ -21,7 +15,7 @@ export function DashboardShell({
   title: string;
   subtitle: string;
   actorLabel: string;
-  navItems: NavItem[];
+  navItems: DashboardNavItem[];
   children: ReactNode;
 }) {
   return (
@@ -59,41 +53,9 @@ export function DashboardShell({
             <SignOutButton />
           </div>
         </header>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "260px minmax(0, 1fr)",
-            minHeight: "calc(100vh - 170px)"
-          }}
-        >
-          <aside
-            style={{
-              padding: 18,
-              borderRight: "1px solid var(--line)",
-              background: "linear-gradient(180deg, rgba(248,250,253,0.96), rgba(245,248,252,0.82))"
-            }}
-          >
-            <nav className="stack-sm">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch
-                  className="btn"
-                  style={{
-                    justifyContent: "flex-start",
-                    minHeight: 50,
-                    background: item.active ? "var(--blue-soft)" : "transparent",
-                    color: item.active ? "var(--blue)" : "var(--text)",
-                    fontWeight: item.active ? 700 : 600
-                  }}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
-          <section style={{ padding: 24 }}>
+        <div className="dashboard-body">
+          <DashboardSidebar navItems={navItems} />
+          <section style={{ padding: 24, minWidth: 0 }}>
             <div className="page-header">
               <div>
                 <h1 className="page-title">{title}</h1>

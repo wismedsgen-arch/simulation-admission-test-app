@@ -445,7 +445,7 @@ export function ReviewWorkspace({
         <div className="chip">Read-only review</div>
       </header>
 
-      <div style={{ display: "grid", gridTemplateColumns: "230px minmax(0, 1fr)", minHeight: "calc(100vh - 400px)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "210px minmax(0, 1fr)", minHeight: "calc(100vh - 400px)" }}>
         <aside
           style={{
             padding: 18,

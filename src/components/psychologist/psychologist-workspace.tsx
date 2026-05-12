@@ -603,7 +603,7 @@ export function PsychologistWorkspace({
           </div>
         </header>
 
-        <div style={{ display: "grid", gridTemplateColumns: "270px minmax(0, 1fr)", minHeight: "calc(100vh - 320px)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "244px minmax(0, 1fr)", minHeight: "calc(100vh - 320px)" }}>
           <aside
             style={{
               padding: 18,
