@@ -61,6 +61,10 @@ export default async function PsychologistSessionsPage({
                   .map((template) => [template.id, { schoolAnswer: template.schoolAnswer, schoolAnswerDirection: template.schoolAnswerDirection }])
               );
 
+            const preloadedTemplateIds = student.examCycle.scenario.templates
+              .filter((template) => template.kind === "PRELOADED")
+              .map((template) => template.id);
+
             const sessionStartedAt = student.session!.startedAt?.toISOString() ?? null;
 
             return {
@@ -135,7 +139,8 @@ export default async function PsychologistSessionsPage({
                   body: template.body,
                   roleName: template.role.name
                 })),
-              templateSchoolAnswerMap
+              templateSchoolAnswerMap,
+              preloadedTemplateIds
             };
           })}
         />

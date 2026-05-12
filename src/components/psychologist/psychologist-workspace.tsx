@@ -310,6 +310,7 @@ export function PsychologistWorkspace({
   files,
   templates,
   templateSchoolAnswerMap,
+  preloadedTemplateIds,
   draft
 }: {
   sessionId: string;
@@ -328,6 +329,7 @@ export function PsychologistWorkspace({
   files: ScenarioFile[];
   templates: Template[];
   templateSchoolAnswerMap?: Record<string, { schoolAnswer: string | null; schoolAnswerDirection: string | null }>;
+  preloadedTemplateIds?: string[];
   draft?: Draft | null;
 }) {
   const router = useRouter();
@@ -403,54 +405,68 @@ export function PsychologistWorkspace({
     return entry;
   }, [selectedThread, templateSchoolAnswerMap]);
 
-  // Timeline entries: all non-SYSTEM messages sorted by sentAt
+  // Timeline entries: index thread positions across ALL messages (so a
+  // hidden preloaded email is still #1 in its thread), but render only
+  // messages that were actually sent DURING the exam — i.e. drop the
+  // preloaded scenario emails. Replies to preloaded threads are kept.
   const timelineEntries = useMemo<TimelineEntry[]>(() => {
-    const nonSystem = messages.filter((m) => m.senderType !== "SYSTEM");
-    const sorted = [...nonSystem].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+    const preloadedSet = new Set(preloadedTemplateIds ?? []);
 
-    // Build thread index per message (position within its thread among non-SYSTEM)
+    const isPreloaded = (m: Message) =>
+      m.senderType === "SYSTEM" || (m.templateId !== null && preloadedSet.has(m.templateId));
+
+    const allSorted = [...messages].sort(
+      (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+    );
+
     const threadMessageCount = new Map<string, number>();
     const threadMessageIndex = new Map<string, number>();
-    for (const msg of sorted) {
+    for (const msg of allSorted) {
       const rootId = getRootId(msg.id, messageById);
       const count = (threadMessageCount.get(rootId) ?? 0) + 1;
       threadMessageCount.set(rootId, count);
       threadMessageIndex.set(msg.id, count);
     }
 
-    const startMs = startedAt ? new Date(startedAt).getTime() : (sorted[0] ? new Date(sorted[0].sentAt).getTime() : 0);
+    const startMs = startedAt
+      ? new Date(startedAt).getTime()
+      : allSorted[0]
+        ? new Date(allSorted[0].sentAt).getTime()
+        : 0;
 
-    return sorted.map((msg) => {
-      const rootId = getRootId(msg.id, messageById);
-      const root = messageById.get(rootId);
-      const isCandidate = msg.senderType === "STUDENT";
-      const isReply = Boolean(msg.replyToId);
-      const hasTemplate = Boolean(msg.templateId);
+    return allSorted
+      .filter((msg) => !isPreloaded(msg))
+      .map((msg) => {
+        const rootId = getRootId(msg.id, messageById);
+        const root = messageById.get(rootId);
+        const isCandidate = msg.senderType === "STUDENT";
+        const isReply = Boolean(msg.replyToId);
+        const hasTemplate = Boolean(msg.templateId);
 
-      let entryType: TimelineEntry["entryType"];
-      if (isCandidate) {
-        entryType = isReply ? "CANDIDATE_REPLY" : "CANDIDATE_INITIATED";
-      } else if (hasTemplate) {
-        entryType = "FOLLOW_UP";
-      } else if (isReply) {
-        entryType = "PSYCH_REPLY";
-      } else {
-        entryType = "PSYCH_INITIATED";
-      }
+        let entryType: TimelineEntry["entryType"];
+        if (isCandidate) {
+          entryType = isReply ? "CANDIDATE_REPLY" : "CANDIDATE_INITIATED";
+        } else if (hasTemplate) {
+          entryType = "FOLLOW_UP";
+        } else if (isReply) {
+          entryType = "PSYCH_REPLY";
+        } else {
+          entryType = "PSYCH_INITIATED";
+        }
 
-      return {
-        messageId: msg.id,
-        sentAt: msg.sentAt,
-        relativeMs: new Date(msg.sentAt).getTime() - startMs,
-        senderType: msg.senderType,
-        senderDisplayName: msg.senderDisplayName,
-        recipientName: msg.recipientName,
-        subject: root?.subject ?? msg.subject,
-        threadIndex: threadMessageIndex.get(msg.id) ?? 1,
-        entryType
-      };
-    });
-  }, [messages, messageById, startedAt]);
+        return {
+          messageId: msg.id,
+          sentAt: msg.sentAt,
+          relativeMs: new Date(msg.sentAt).getTime() - startMs,
+          senderType: msg.senderType,
+          senderDisplayName: msg.senderDisplayName,
+          recipientName: msg.recipientName,
+          subject: root?.subject ?? msg.subject,
+          threadIndex: threadMessageIndex.get(msg.id) ?? 1,
+          entryType
+        };
+      });
+  }, [messages, messageById, startedAt, preloadedTemplateIds]);
 
   useEffect(() => {
     if (selectedMessageId && messageById.has(selectedMessageId)) {

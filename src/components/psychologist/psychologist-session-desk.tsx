@@ -78,6 +78,7 @@ type SessionDeskStudent = {
     roleName: string;
   }>;
   templateSchoolAnswerMap: Record<string, { schoolAnswer: string | null; schoolAnswerDirection: string | null }>;
+  preloadedTemplateIds: string[];
 };
 
 export function PsychologistSessionDesk({
@@ -311,6 +312,7 @@ export function PsychologistSessionDesk({
             templates={activeStudent.templates}
             messages={activeStudent.session.messages}
             templateSchoolAnswerMap={activeStudent.templateSchoolAnswerMap}
+            preloadedTemplateIds={activeStudent.preloadedTemplateIds}
           />
         )}
       </div>

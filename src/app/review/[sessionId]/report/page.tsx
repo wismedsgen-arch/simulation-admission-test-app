@@ -397,21 +397,28 @@ export default async function ReviewReportPage({
       .map((m, i) => [m.id, i + 1])
   );
 
-  // Timeline entries (non-SYSTEM, sorted ascending)
-  const timelineMessages = session.messages
-    .filter((m) => m.senderType !== "SYSTEM")
-    .sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
+  // Timeline: index thread positions across ALL messages so that hidden
+  // preloaded scenario emails still occupy #1 in their thread, then
+  // render only messages actually sent during the exam (drop preloaded).
+  const tlIsPreloaded = (m: ReportMessage) =>
+    m.template?.kind === TemplateKind.PRELOADED || m.senderType === "SYSTEM";
+
+  const tlAllSorted = [...session.messages].sort(
+    (a, b) => a.sentAt.getTime() - b.sentAt.getTime()
+  );
 
   const tlThreadCount = new Map<string, number>();
   const tlThreadIndex = new Map<string, number>();
-  for (const msg of timelineMessages) {
+  for (const msg of tlAllSorted) {
     const rootId = findRootId(msg.id);
     const count = (tlThreadCount.get(rootId) ?? 0) + 1;
     tlThreadCount.set(rootId, count);
     tlThreadIndex.set(msg.id, count);
   }
 
-  const sessionStartMs = session.startedAt ? session.startedAt.getTime() : (timelineMessages[0]?.sentAt.getTime() ?? 0);
+  const timelineMessages = tlAllSorted.filter((m) => !tlIsPreloaded(m));
+
+  const sessionStartMs = session.startedAt ? session.startedAt.getTime() : (tlAllSorted[0]?.sentAt.getTime() ?? 0);
 
   function tlEntryType(msg: (typeof timelineMessages)[0]): string {
     if (msg.senderType === "STUDENT") return msg.replyToId ? "Candidate-reply" : "Candidate-initiated";

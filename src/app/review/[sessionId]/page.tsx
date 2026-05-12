@@ -29,7 +29,7 @@ export default async function ReviewDetailPage({
           roles: true,
           files: true,
           templates: {
-            select: { id: true, schoolAnswer: true, schoolAnswerDirection: true }
+            select: { id: true, kind: true, schoolAnswer: true, schoolAnswerDirection: true }
           }
         }
       },
@@ -118,6 +118,9 @@ export default async function ReviewDetailPage({
             .filter((t) => t.schoolAnswer)
             .map((t) => [t.id, { schoolAnswer: t.schoolAnswer, schoolAnswerDirection: t.schoolAnswerDirection }])
         )}
+        preloadedTemplateIds={session.scenario.templates
+          .filter((t) => t.kind === "PRELOADED")
+          .map((t) => t.id)}
       />
     </div>
   );

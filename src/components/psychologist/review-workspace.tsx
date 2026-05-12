@@ -303,7 +303,8 @@ export function ReviewWorkspace({
   messages,
   roles,
   files,
-  templateSchoolAnswerMap
+  templateSchoolAnswerMap,
+  preloadedTemplateIds
 }: {
   studentName: string;
   sessionStatus: string;
@@ -312,6 +313,7 @@ export function ReviewWorkspace({
   roles: Role[];
   files: ScenarioFile[];
   templateSchoolAnswerMap: Record<string, { schoolAnswer: string | null; schoolAnswerDirection: string | null }>;
+  preloadedTemplateIds?: string[];
 }) {
   const messageById = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
 
@@ -361,12 +363,17 @@ export function ReviewWorkspace({
   }, [selectedThread, templateSchoolAnswerMap]);
 
   const timelineEntries = useMemo<TimelineEntry[]>(() => {
-    const nonSystem = messages.filter((m) => m.senderType !== "SYSTEM");
-    const sorted = [...nonSystem].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+    const preloadedSet = new Set(preloadedTemplateIds ?? []);
+    const isPreloaded = (m: Message) =>
+      m.senderType === "SYSTEM" || (m.templateId !== null && preloadedSet.has(m.templateId));
+
+    const allSorted = [...messages].sort(
+      (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+    );
 
     const threadMessageIndex = new Map<string, number>();
     const threadCount = new Map<string, number>();
-    for (const msg of sorted) {
+    for (const msg of allSorted) {
       const rootId = getRootId(msg.id, messageById);
       const count = (threadCount.get(rootId) ?? 0) + 1;
       threadCount.set(rootId, count);
@@ -375,40 +382,42 @@ export function ReviewWorkspace({
 
     const startMs = startedAt
       ? new Date(startedAt).getTime()
-      : sorted[0]
-        ? new Date(sorted[0].sentAt).getTime()
+      : allSorted[0]
+        ? new Date(allSorted[0].sentAt).getTime()
         : 0;
 
-    return sorted.map((msg) => {
-      const rootId = getRootId(msg.id, messageById);
-      const root = messageById.get(rootId);
-      const isCandidate = msg.senderType === "STUDENT";
-      const isReply = Boolean(msg.replyToId);
-      const hasTemplate = Boolean(msg.templateId);
+    return allSorted
+      .filter((msg) => !isPreloaded(msg))
+      .map((msg) => {
+        const rootId = getRootId(msg.id, messageById);
+        const root = messageById.get(rootId);
+        const isCandidate = msg.senderType === "STUDENT";
+        const isReply = Boolean(msg.replyToId);
+        const hasTemplate = Boolean(msg.templateId);
 
-      let entryType: TimelineEntry["entryType"];
-      if (isCandidate) {
-        entryType = isReply ? "CANDIDATE_REPLY" : "CANDIDATE_INITIATED";
-      } else if (hasTemplate) {
-        entryType = "FOLLOW_UP";
-      } else if (isReply) {
-        entryType = "PSYCH_REPLY";
-      } else {
-        entryType = "PSYCH_INITIATED";
-      }
+        let entryType: TimelineEntry["entryType"];
+        if (isCandidate) {
+          entryType = isReply ? "CANDIDATE_REPLY" : "CANDIDATE_INITIATED";
+        } else if (hasTemplate) {
+          entryType = "FOLLOW_UP";
+        } else if (isReply) {
+          entryType = "PSYCH_REPLY";
+        } else {
+          entryType = "PSYCH_INITIATED";
+        }
 
-      return {
-        messageId: msg.id,
-        sentAt: msg.sentAt,
-        relativeMs: new Date(msg.sentAt).getTime() - startMs,
-        senderDisplayName: msg.senderDisplayName,
-        recipientName: msg.recipientName,
-        subject: root?.subject ?? msg.subject,
-        threadIndex: threadMessageIndex.get(msg.id) ?? 1,
-        entryType
-      };
-    });
-  }, [messages, messageById, startedAt]);
+        return {
+          messageId: msg.id,
+          sentAt: msg.sentAt,
+          relativeMs: new Date(msg.sentAt).getTime() - startMs,
+          senderDisplayName: msg.senderDisplayName,
+          recipientName: msg.recipientName,
+          subject: root?.subject ?? msg.subject,
+          threadIndex: threadMessageIndex.get(msg.id) ?? 1,
+          entryType
+        };
+      });
+  }, [messages, messageById, startedAt, preloadedTemplateIds]);
 
   const mailboxLabel = mailbox === "inbox" ? "Inbox" : mailbox === "sent" ? "Sent" : mailbox === "files" ? "Files" : "Timeline";
 
