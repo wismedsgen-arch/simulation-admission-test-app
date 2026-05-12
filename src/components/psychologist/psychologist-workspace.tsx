@@ -699,9 +699,7 @@ export function PsychologistWorkspace({
             </div>
 
             <div style={{ minWidth: 0, overflow: "auto", minHeight: 0 }}>
-              {mailbox === "timeline" ? (
-                <TimelineView entries={timelineEntries} />
-              ) : view === "compose" ? (
+              {view === "compose" ? (
                 <div style={{ padding: "28px clamp(18px, 3vw, 40px)", minHeight: "100%" }}>
                   <div className="stack-md" style={{ width: "100%", maxWidth: 1240, margin: "0 auto" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
@@ -790,6 +788,8 @@ export function PsychologistWorkspace({
                     </form>
                   </div>
                 </div>
+              ) : mailbox === "timeline" ? (
+                <TimelineView entries={timelineEntries} />
               ) : view === "read" && mailbox === "files" && selectedFile ? (
                 <div style={{ padding: "28px clamp(18px, 3vw, 40px)", minHeight: "100%" }}>
                   <div className="stack-md" style={{ width: "100%", maxWidth: 1100, margin: "0 auto", minHeight: "calc(100vh - 320px)" }}>
