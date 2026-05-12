@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft,
   CheckCheck,
@@ -1078,53 +1079,56 @@ export function PsychologistWorkspace({
         </div>
       ) : null}
 
-      {showInstructions ? (
-        <div className="modal-backdrop" style={{ zIndex: 80 }}>
-          <div className="modal-card" style={{ width: "min(720px, 100%)" }}>
-            <div className="stack-md">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                <div>
-                  <h2 style={{ margin: 0 }}>{openingTitle}</h2>
+      {showInstructions && typeof document !== "undefined"
+        ? createPortal(
+            <div className="modal-backdrop" style={{ zIndex: 80 }}>
+              <div className="modal-card" style={{ width: "min(720px, 100%)" }}>
+                <div className="stack-md">
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                    <div>
+                      <h2 style={{ margin: 0 }}>{openingTitle}</h2>
+                    </div>
+                    <button type="button" className="icon-btn" aria-label="Close instructions" onClick={() => setShowInstructions(false)}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="admin-tabs" style={{ width: "fit-content" }}>
+                    <button
+                      type="button"
+                      className={`admin-tab${instructionTab === "psychologist" ? " admin-tab--active" : ""}`}
+                      onClick={() => setInstructionTab("psychologist")}
+                    >
+                      Psychologist instructions
+                    </button>
+                    <button
+                      type="button"
+                      className={`admin-tab${instructionTab === "student" ? " admin-tab--active" : ""}`}
+                      onClick={() => setInstructionTab("student")}
+                    >
+                      Student instructions
+                    </button>
+                  </div>
+                  <div
+                    className="panel"
+                    style={{
+                      padding: 18,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.7,
+                      textAlign:
+                        instructionTab === "psychologist"
+                          ? toTextAlign(psychologistInstructionsDirection)
+                          : toTextAlign(openingInstructionsDirection)
+                    }}
+                    dir={instructionTab === "psychologist" ? toDomDir(psychologistInstructionsDirection) : toDomDir(openingInstructionsDirection)}
+                  >
+                    {instructionTab === "psychologist" ? psychologistInstructions : openingInstructions}
+                  </div>
                 </div>
-                <button type="button" className="icon-btn" aria-label="Close instructions" onClick={() => setShowInstructions(false)}>
-                  <X size={18} />
-                </button>
               </div>
-              <div className="admin-tabs" style={{ width: "fit-content" }}>
-                <button
-                  type="button"
-                  className={`admin-tab${instructionTab === "psychologist" ? " admin-tab--active" : ""}`}
-                  onClick={() => setInstructionTab("psychologist")}
-                >
-                  Psychologist instructions
-                </button>
-                <button
-                  type="button"
-                  className={`admin-tab${instructionTab === "student" ? " admin-tab--active" : ""}`}
-                  onClick={() => setInstructionTab("student")}
-                >
-                  Student instructions
-                </button>
-              </div>
-              <div
-                className="panel"
-                style={{
-                  padding: 18,
-                  whiteSpace: "pre-wrap",
-                  lineHeight: 1.7,
-                  textAlign:
-                    instructionTab === "psychologist"
-                      ? toTextAlign(psychologistInstructionsDirection)
-                      : toTextAlign(openingInstructionsDirection)
-                }}
-                dir={instructionTab === "psychologist" ? toDomDir(psychologistInstructionsDirection) : toDomDir(openingInstructionsDirection)}
-              >
-                {instructionTab === "psychologist" ? psychologistInstructions : openingInstructions}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }
