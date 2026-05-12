@@ -202,6 +202,7 @@ export function PsychologistWorkspace({
   const [composeBodyDirection, setComposeBodyDirection] = useState<"AUTO" | "LTR" | "RTL">("AUTO");
   const [replyBodyDirection, setReplyBodyDirection] = useState<"AUTO" | "LTR" | "RTL">("AUTO");
   const [state, formAction] = useActionState<ActionResult, FormData>(psychologistSendMessageAction, {});
+  const submitTypeRef = useRef<"compose" | "reply">("compose");
   const replyFormRef = useRef<HTMLFormElement>(null);
   const [templateState, templateAction] = useActionState<ActionResult, FormData>(sendTemplateEmailAction, {});
 
@@ -251,14 +252,17 @@ export function PsychologistWorkspace({
       return;
     }
 
-    setSubject("");
-    setBody("");
-    setReplyBody("");
-    setComposeBodyDirection("AUTO");
-    setReplyBodyDirection("AUTO");
-    setReplyOpen(false);
-    setView("list");
-    setMailbox("inbox");
+    if (submitTypeRef.current === "reply") {
+      setReplyOpen(false);
+      setReplyBody("");
+      setReplyBodyDirection("AUTO");
+    } else {
+      setSubject("");
+      setBody("");
+      setComposeBodyDirection("AUTO");
+      setView("list");
+      setMailbox("inbox");
+    }
     setToast("Mail sent");
     router.refresh();
   }, [router, state]);
@@ -490,7 +494,17 @@ export function PsychologistWorkspace({
                       </button>
                     </div>
 
-                    <form action={formAction} className="stack-md">
+                    <form
+                      action={formAction}
+                      className="stack-md"
+                      onSubmit={(e) => {
+                        if (!window.confirm("Send this email?")) {
+                          e.preventDefault();
+                          return;
+                        }
+                        submitTypeRef.current = "compose";
+                      }}
+                    >
                       {state.error ? (
                         <div className="panel" style={{ padding: 14, color: "#d93025", background: "#fff6f5" }}>
                           {state.error}
@@ -711,7 +725,9 @@ export function PsychologistWorkspace({
                         onSubmit={(e) => {
                           if (!window.confirm("Send this reply?")) {
                             e.preventDefault();
+                            return;
                           }
+                          submitTypeRef.current = "reply";
                         }}
                       >
                         {state.error ? (

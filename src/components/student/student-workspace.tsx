@@ -650,7 +650,11 @@ export function StudentWorkspace({
                         ref={replyFormRef}
                         action={formAction}
                         className="stack-md"
-                        onSubmit={() => {
+                        onSubmit={(e) => {
+                          if (!window.confirm("Send this reply?")) {
+                            e.preventDefault();
+                            return;
+                          }
                           submitTypeRef.current = "reply";
                         }}
                       >
