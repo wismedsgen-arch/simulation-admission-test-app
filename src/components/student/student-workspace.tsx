@@ -607,7 +607,7 @@ export function StudentWorkspace({
                         <article
                           key={message.id}
                           className="panel"
-                          style={{ padding: 24 }}
+                          style={{ padding: 24, minWidth: 0, overflowX: "auto" }}
                         >
                           <div className="stack-sm">
                             <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>

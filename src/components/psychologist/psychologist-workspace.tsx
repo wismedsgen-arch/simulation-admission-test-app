@@ -645,6 +645,8 @@ export function PsychologistWorkspace({
                           className="panel"
                           style={{
                             padding: 24,
+                            minWidth: 0,
+                            overflowX: "auto",
                             borderColor:
                               message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
                                 ? "rgba(217, 48, 37, 0.18)"
