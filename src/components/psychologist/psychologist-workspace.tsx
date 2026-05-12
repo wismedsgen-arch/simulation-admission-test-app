@@ -638,15 +638,13 @@ export function PsychologistWorkspace({
                       </div>
                     </div>
 
-                    <div className="stack-md">
+                    <div className="stack-md" style={{ minWidth: 0 }}>
                       {selectedThread.map((message) => (
                         <article
                           key={message.id}
                           className="panel"
                           style={{
                             padding: 24,
-                            flex: selectedThread.length === 1 ? 1 : undefined,
-                            minHeight: selectedThread.length === 1 ? "max(220px, calc(100vh - 560px))" : undefined,
                             borderColor:
                               message.senderType === "STUDENT" && message.requiresResponse && !message.resolvedAt
                                 ? "rgba(217, 48, 37, 0.18)"
@@ -682,7 +680,8 @@ export function PsychologistWorkspace({
                               style={{
                                 whiteSpace: "pre-wrap",
                                 lineHeight: 1.75,
-                                textAlign: toTextAlign(message.bodyDirection)
+                                textAlign: toTextAlign(message.bodyDirection),
+                                overflowWrap: "break-word"
                               }}
                             >
                               {message.body}

@@ -602,16 +602,12 @@ export function StudentWorkspace({
                       ) : null}
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: 16, minHeight: 0 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16, minHeight: 0, minWidth: 0 }}>
                       {selectedThread.map((message) => (
                         <article
                           key={message.id}
                           className="panel"
-                          style={{
-                            padding: 24,
-                            flex: selectedThread.length === 1 ? 1 : undefined,
-                            minHeight: selectedThread.length === 1 ? "max(220px, calc(100vh - 560px))" : undefined
-                          }}
+                          style={{ padding: 24 }}
                         >
                           <div className="stack-sm">
                             <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
@@ -628,7 +624,8 @@ export function StudentWorkspace({
                               style={{
                                 whiteSpace: "pre-wrap",
                                 lineHeight: 1.75,
-                                textAlign: toTextAlign(message.bodyDirection)
+                                textAlign: toTextAlign(message.bodyDirection),
+                                overflowWrap: "break-word"
                               }}
                             >
                               {message.body}
