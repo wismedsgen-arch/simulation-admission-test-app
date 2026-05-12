@@ -157,13 +157,15 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 | B+ | Report TOC: thread classification (Preloaded / Follow-up / Psych-initiated / Candidate-initiated), status badges (Unanswered / Answered / Answered · Extended / Addressed / Unaddressed), last sender column, anchor links, per-thread message counts; candidate reply visual distinction (green highlight); unanswered template threads filtered from full sections | `src/app/review/[sessionId]/report/page.tsx` |
 | — | Student login redirect fix: redirects now preserve the actual request origin (LAN IP or Railway host) instead of hardcoded `APP_BASE_URL` | `src/app/student/login/submit/route.ts` |
 | — | Logout redirect now correctly sends staff to `/staff/login` and students to `/student/login` | `src/lib/actions/auth.ts` |
+| — | Report itemLabel fix: psychologist-initiated threads now correctly labelled "Psychologist-initiated thread" instead of "Candidate-initiated thread" | `src/app/review/[sessionId]/report/page.tsx` |
+| — | **Compose/reply UX stabilization** — form clears and closes after successful send; `useActionState` success effect dependency fixed (`state` object ref instead of `state.success` string, so re-firing works on repeat sends); `submitTypeRef` tracks compose vs reply so student replies stay in read view while new-compose returns to list; psychologist replies stay in thread after send; `window.confirm()` before all sends (student compose + reply: "Send this email?" / "Send this reply?"; psychologist compose + reply: same); reply body cleared when switching threads; reply form scrolls into view on open; email card height no longer forced (content-sized); long email content wraps via `overflow-wrap: break-word`; `minWidth: 0` + `overflowX: auto` on article cards prevent wide emails from stretching sibling elements | `src/components/student/student-workspace.tsx`, `src/components/psychologist/psychologist-workspace.tsx` |
 
 #### Pending
 
 | Phase | Description | Notes |
 |---|---|---|
-| C | **School answer on the psychologist live desk** — show the school answer panel beside the candidate's first reply to each template-originated thread during active sessions | `src/components/psychologist/psychologist-workspace.tsx` + the page that fetches session data |
-| D | **Candidate action order / timeline** — number candidate replies chronologically (#1, #2…); show in live desk and report | `psychologist-workspace.tsx`, `report/page.tsx` |
+| C | **School answer on the psychologist live desk and completed review** — (1) show the school answer panel in the psychologist live desk beside the candidate's first reply to each template-originated thread during active sessions; (2) show the same school answer panel in the completed review page (`/review/[sessionId]`) which currently renders `StudentWorkspace` in read-only mode but has no school-answer display | `src/components/psychologist/psychologist-workspace.tsx` + live desk page; `src/app/review/[sessionId]/page.tsx` + a new or extended review component |
+| D | **Candidate action order / timeline** — number candidate replies chronologically (#1, #2…); show in: (1) psychologist live desk beside each candidate message, (2) consolidated HTML report, (3) completed review page | `psychologist-workspace.tsx`, `report/page.tsx`, `review/[sessionId]/page.tsx` |
 | E | **File audit trail** — add `uploadedByType` + `uploadedById` to `SessionAttachment`; add `uploadedByUserId` to `ScenarioFile`; expose in report | `prisma/schema.prisma`, student/psychologist/admin actions, `report/page.tsx` |
 | F | **No-hard-delete audit** — verify no code path physically removes messages, attachments, or scenario files after a session ends; replace any hard-delete with soft-delete | Audit only for now |
 | G | **Seed guard** — add `SEED_ON_BOOT` env var; seed exits immediately unless `SEED_ON_BOOT=true`; document in `.env.example` and here | `prisma/seed.ts`, `.env.example` |
@@ -171,9 +173,9 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 
 ### Development Priorities
 
-1. **Phase C** — School answer on psychologist live desk (highest daily-use value, low risk).
+1. **Phase C** — School answer on psychologist live desk + completed review (highest daily-use value, low risk).
 2. **Phase G** — Seed guard before any real-event deployment (must-do safety measure).
-3. **Phase D** — Candidate action order / timeline.
+3. **Phase D** — Candidate action order / timeline (live desk + completed review + consolidated report).
 4. **Phase E** — File audit trail (schema change, touches multiple actions).
 5. **Phase F** — No-hard-delete audit.
 6. **Phase H** — Admin data export.
