@@ -192,7 +192,9 @@ export async function studentSendMessageAction(
         storageKey: file.storageKey,
         fileName: file.fileName,
         mimeType: file.mimeType,
-        sizeBytes: file.sizeBytes
+        sizeBytes: file.sizeBytes,
+        uploadedByType: ActorType.STUDENT,
+        uploadedById: actor.cycleStudentId
       }))
     });
   }
