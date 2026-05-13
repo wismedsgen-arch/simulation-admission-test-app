@@ -159,13 +159,14 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 | — | Logout redirect now correctly sends staff to `/staff/login` and students to `/student/login` | `src/lib/actions/auth.ts` |
 | — | Report itemLabel fix: psychologist-initiated threads now correctly labelled "Psychologist-initiated thread" instead of "Candidate-initiated thread" | `src/app/review/[sessionId]/report/page.tsx` |
 | — | **Compose/reply UX stabilization** — form clears and closes after successful send; `useActionState` success effect dependency fixed (`state` object ref instead of `state.success` string, so re-firing works on repeat sends); `submitTypeRef` tracks compose vs reply so student replies stay in read view while new-compose returns to list; psychologist replies stay in thread after send; `window.confirm()` before all sends (student compose + reply: "Send this email?" / "Send this reply?"; psychologist compose + reply: same); reply body cleared when switching threads; reply form scrolls into view on open; email card height no longer forced (content-sized); long email content wraps via `overflow-wrap: break-word`; `minWidth: 0` + `overflowX: auto` on article cards prevent wide emails from stretching sibling elements | `src/components/student/student-workspace.tsx`, `src/components/psychologist/psychologist-workspace.tsx` |
+| C | **School answer on psychologist live desk + completed review** — `SchoolAnswerPanel` renders alongside template-originated threads during active sessions (two-column layout) and in the completed review page; populated from `ScenarioTemplate.schoolAnswer` with RTL/LTR direction support | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/app/review/[sessionId]/page.tsx` |
+| D | **Candidate action order / timeline** — new Timeline tab on both live desk and completed review showing all session activity sorted by `sentAt` with per-thread message index (`#1`, `#2`, …), entry-type pills (Candidate-initiated / Candidate reply / Follow-up / Psych-initiated / Psych reply), relative time from session start, and HH:mm:ss absolute time; consolidated report has a matching Timeline section and labels candidate replies "Candidate reply #N" | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/app/review/[sessionId]/report/page.tsx` |
+| — | **Post-Phase-C/D stabilization pass** — Compose button works from the psychologist Timeline tab (returns to inbox before opening composer); instructions modal rendered via portal so backdrop-filter clipping doesn't push content off-screen on small viewports; Timeline excludes PRELOADED scenario emails from rows while still counting them toward per-thread numbering (so the first candidate reply to a preloaded thread is still `#2`); Timeline columns use compact HH:mm:ss display with horizontal scroll on narrow screens; outer dashboard sidebar is collapsible with `localStorage` persistence and inner sidebars trimmed modestly | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/components/shared/dashboard-sidebar.tsx`, `src/components/shared/dashboard-shell.tsx`, `src/app/globals.css` |
 
 #### Pending
 
 | Phase | Description | Notes |
 |---|---|---|
-| C | **School answer on the psychologist live desk and completed review** — (1) show the school answer panel in the psychologist live desk beside the candidate's first reply to each template-originated thread during active sessions; (2) show the same school answer panel in the completed review page (`/review/[sessionId]`) which currently renders `StudentWorkspace` in read-only mode but has no school-answer display | `src/components/psychologist/psychologist-workspace.tsx` + live desk page; `src/app/review/[sessionId]/page.tsx` + a new or extended review component |
-| D | **Candidate action order / timeline** — number candidate replies chronologically (#1, #2…); show in: (1) psychologist live desk beside each candidate message, (2) consolidated HTML report, (3) completed review page | `psychologist-workspace.tsx`, `report/page.tsx`, `review/[sessionId]/page.tsx` |
 | E | **File audit trail** — add `uploadedByType` + `uploadedById` to `SessionAttachment`; add `uploadedByUserId` to `ScenarioFile`; expose in report | `prisma/schema.prisma`, student/psychologist/admin actions, `report/page.tsx` |
 | F | **No-hard-delete audit** — verify no code path physically removes messages, attachments, or scenario files after a session ends; replace any hard-delete with soft-delete | Audit only for now |
 | G | **Seed guard** — add `SEED_ON_BOOT` env var; seed exits immediately unless `SEED_ON_BOOT=true`; document in `.env.example` and here | `prisma/seed.ts`, `.env.example` |
@@ -173,10 +174,8 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 
 ### Development Priorities
 
-1. **Phase C** — School answer on psychologist live desk + completed review (highest daily-use value, low risk).
-2. **Phase G** — Seed guard before any real-event deployment (must-do safety measure).
-3. **Phase D** — Candidate action order / timeline (live desk + completed review + consolidated report).
-4. **Phase E** — File audit trail (schema change, touches multiple actions).
-5. **Phase F** — No-hard-delete audit.
-6. **Phase H** — Admin data export.
+1. **Phase G** — Seed guard. Must-do safety measure before any real-event deployment, because `npm start` still runs `prisma db seed` on every Railway boot.
+2. **Phase E** — File audit trail (schema change, touches multiple actions).
+3. **Phase F** — No-hard-delete audit.
+4. **Phase H** — Admin data export.
 
