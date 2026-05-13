@@ -389,7 +389,7 @@ export async function createScenarioFileAction(
   _prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  await ensureAdmin();
+  const actor = await ensureAdmin();
 
   const parsed = scenarioFileSchema.safeParse({
     scenarioId: formData.get("scenarioId"),
@@ -431,7 +431,8 @@ export async function createScenarioFileAction(
       storageKey: storedFile?.storageKey ?? null,
       fileName: storedFile?.fileName ?? null,
       mimeType: storedFile?.mimeType ?? null,
-      sizeBytes: storedFile?.sizeBytes ?? null
+      sizeBytes: storedFile?.sizeBytes ?? null,
+      uploadedByUserId: actor.userId
     }
   });
 

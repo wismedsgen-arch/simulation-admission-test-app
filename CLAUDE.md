@@ -171,18 +171,12 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 | D | **Candidate action order / timeline** — new Timeline tab on both live desk and completed review showing all session activity sorted by `sentAt` with per-thread message index (`#1`, `#2`, …), entry-type pills (Candidate-initiated / Candidate reply / Follow-up / Psych-initiated / Psych reply), relative time from session start, and HH:mm:ss absolute time; consolidated report has a matching Timeline section and labels candidate replies "Candidate reply #N" | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/app/review/[sessionId]/report/page.tsx` |
 | — | **Post-Phase-C/D stabilization pass** — Compose button works from the psychologist Timeline tab (returns to inbox before opening composer); instructions modal rendered via portal so backdrop-filter clipping doesn't push content off-screen on small viewports; Timeline excludes PRELOADED scenario emails from rows while still counting them toward per-thread numbering (so the first candidate reply to a preloaded thread is still `#2`); Timeline columns use compact HH:mm:ss display with horizontal scroll on narrow screens; outer dashboard sidebar is collapsible with `localStorage` persistence and inner sidebars trimmed modestly | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/components/shared/dashboard-sidebar.tsx`, `src/components/shared/dashboard-shell.tsx`, `src/app/globals.css` |
 | G | **Seed guard** — `prisma/seed.ts` exits immediately unless `SEED_ON_BOOT=true`; documented in `.env.example`. Default behaviour is therefore "do nothing", which makes `npm start` safe to call on a production database with real candidate data | `prisma/seed.ts`, `.env.example` |
-
-#### Pending
-
-| Phase | Description | Notes |
-|---|---|---|
-| E | **File audit trail** — add `uploadedByType` + `uploadedById` to `SessionAttachment`; add `uploadedByUserId` to `ScenarioFile`; expose in report | `prisma/schema.prisma`, student/psychologist/admin actions, `report/page.tsx` |
+| E | **File audit trail** — nullable `uploadedByType` + `uploadedById` on `SessionAttachment` and `uploadedByUserId` (+ `User` relation) on `ScenarioFile`; populated in every upload path (student=STUDENT/cycleStudentId, psychologist compose/reply=STAFF/userId, preloaded + follow-up template propagation=SYSTEM/null, admin scenario file=actor.userId); consolidated review report renders an "Uploaded by Candidate / Psychologist / Scenario system" line under each attachment. Pre-existing rows show no uploader line (acceptable historical gap) | `prisma/schema.prisma`, `src/lib/actions/student.ts`, `src/lib/actions/psychologist.ts`, `src/lib/actions/admin.ts`, `src/app/review/[sessionId]/report/page.tsx` |
 | F | **No-hard-delete audit** — verify no code path physically removes messages, attachments, or scenario files after a session ends; replace any hard-delete with soft-delete | Audit only for now |
 | H | **Admin data export** — `/admin/export` page: JSON session transcript download + CSV attachment manifest; both in-process (no shell tools required) | `src/app/admin/export/page.tsx`, `src/lib/actions/admin.ts` |
 
 ### Development Priorities
 
-1. **Phase E** — File audit trail (schema change, touches multiple actions).
-2. **Phase F** — No-hard-delete audit.
-3. **Phase H** — Admin data export.
+1. **Phase F** — No-hard-delete audit.
+2. **Phase H** — Admin data export.
 

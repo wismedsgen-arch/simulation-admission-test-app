@@ -230,7 +230,9 @@ export async function startSessionAction(
             storageKey: attachment.storageKey,
             fileName: attachment.fileName,
             mimeType: attachment.mimeType,
-            sizeBytes: attachment.sizeBytes
+            sizeBytes: attachment.sizeBytes,
+            uploadedByType: ActorType.SYSTEM,
+            uploadedById: null
           }))
         });
       }
@@ -354,7 +356,9 @@ export async function prepareClaimedStudentsAction(
               storageKey: attachment.storageKey,
               fileName: attachment.fileName,
               mimeType: attachment.mimeType,
-              sizeBytes: attachment.sizeBytes
+              sizeBytes: attachment.sizeBytes,
+              uploadedByType: ActorType.SYSTEM,
+              uploadedById: null
             }))
           });
         }
@@ -543,7 +547,9 @@ export async function psychologistSendMessageAction(
         storageKey: file.storageKey,
         fileName: file.fileName,
         mimeType: file.mimeType,
-        sizeBytes: file.sizeBytes
+        sizeBytes: file.sizeBytes,
+        uploadedByType: ActorType.STAFF,
+        uploadedById: actor.userId
       }))
     });
   }
@@ -636,7 +642,9 @@ export async function sendTemplateEmailAction(
         storageKey: attachment.storageKey,
         fileName: attachment.fileName,
         mimeType: attachment.mimeType,
-        sizeBytes: attachment.sizeBytes
+        sizeBytes: attachment.sizeBytes,
+        uploadedByType: ActorType.SYSTEM,
+        uploadedById: null
       }))
     });
   }

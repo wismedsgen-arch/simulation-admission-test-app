@@ -80,6 +80,7 @@ model User {
   startedSessions  Session[]            @relation("StartedBy")
   sessions         AppSession[]
   auditLogs        AuditLog[]
+  uploadedScenarioFiles ScenarioFile[]  @relation("ScenarioFileUploader")
 }
 
 model StaffSignupRequest {
@@ -176,8 +177,10 @@ model ScenarioFile {
   fileName   String?
   mimeType   String?
   sizeBytes  Int?
+  uploadedByUserId String?
   createdAt  DateTime         @default(now())
   scenario   Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  uploadedBy User?            @relation("ScenarioFileUploader", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
 }
 
 model ExamCycle {
@@ -272,14 +275,16 @@ model SessionMessage {
 }
 
 model SessionAttachment {
-  id         String         @id @default(cuid())
-  messageId  String
-  storageKey String
-  fileName   String
-  mimeType   String
-  sizeBytes  Int
-  createdAt  DateTime       @default(now())
-  message    SessionMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  messageId      String
+  storageKey     String
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  uploadedByType ActorType?
+  uploadedById   String?
+  createdAt      DateTime       @default(now())
+  message        SessionMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 }
 
 model Draft {

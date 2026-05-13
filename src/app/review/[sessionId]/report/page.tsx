@@ -394,6 +394,37 @@ export default async function ReviewReportPage({
   const psychologistMessageCount = session.messages.filter((message) => message.senderType === "STAFF").length;
   const attachmentCount = session.messages.reduce((sum, message) => sum + message.attachments.length, 0);
 
+  const staffUploaderIds = new Set<string>();
+  for (const message of session.messages) {
+    for (const attachment of message.attachments) {
+      if (attachment.uploadedByType === "STAFF" && attachment.uploadedById) {
+        staffUploaderIds.add(attachment.uploadedById);
+      }
+    }
+  }
+  const staffUploaders = staffUploaderIds.size
+    ? await prisma.user.findMany({
+        where: { id: { in: Array.from(staffUploaderIds) } },
+        select: { id: true, fullName: true }
+      })
+    : [];
+  const staffUploaderNames = new Map(staffUploaders.map((user) => [user.id, user.fullName]));
+
+  const attachmentUploaderLabel = new Map<string, string>();
+  for (const message of session.messages) {
+    for (const attachment of message.attachments) {
+      if (!attachment.uploadedByType) continue;
+      if (attachment.uploadedByType === "STUDENT") {
+        attachmentUploaderLabel.set(attachment.id, `Candidate (${session.cycleStudent.fullName})`);
+      } else if (attachment.uploadedByType === "STAFF") {
+        const name = attachment.uploadedById ? staffUploaderNames.get(attachment.uploadedById) : null;
+        attachmentUploaderLabel.set(attachment.id, name ? `Psychologist (${name})` : "Psychologist");
+      } else {
+        attachmentUploaderLabel.set(attachment.id, "Scenario system");
+      }
+    }
+  }
+
   // Candidate global sequence numbers
   const candidateSequence = new Map(
     session.messages
@@ -618,7 +649,13 @@ export default async function ReviewReportPage({
           threads.map((thread, i) => {
             if (!threadStats[i].showFull) return null;
             return (
-              <ReportThreadSection key={thread.rootId} index={i + 1} thread={thread} candidateSequence={candidateSequence} />
+              <ReportThreadSection
+                key={thread.rootId}
+                index={i + 1}
+                thread={thread}
+                candidateSequence={candidateSequence}
+                attachmentUploaderLabel={attachmentUploaderLabel}
+              />
             );
           })
         )}
@@ -661,7 +698,17 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ReportThreadSection({ index, thread, candidateSequence }: { index: number; thread: Thread; candidateSequence: Map<string, number> }) {
+function ReportThreadSection({
+  index,
+  thread,
+  candidateSequence,
+  attachmentUploaderLabel
+}: {
+  index: number;
+  thread: Thread;
+  candidateSequence: Map<string, number>;
+  attachmentUploaderLabel: Map<string, string>;
+}) {
   const itemLabel =
     thread.kind === TemplateKind.PRELOADED && thread.sendOrder
       ? `Item ${thread.sendOrder} · preloaded`
@@ -708,13 +755,26 @@ function ReportThreadSection({ index, thread, candidateSequence }: { index: numb
       ) : null}
 
       {thread.messages.map((message) => (
-        <ReportMessageBlock key={message.id} message={message} candidateN={candidateSequence.get(message.id)} />
+        <ReportMessageBlock
+          key={message.id}
+          message={message}
+          candidateN={candidateSequence.get(message.id)}
+          attachmentUploaderLabel={attachmentUploaderLabel}
+        />
       ))}
     </section>
   );
 }
 
-function ReportMessageBlock({ message, candidateN }: { message: ReportMessage; candidateN?: number }) {
+function ReportMessageBlock({
+  message,
+  candidateN,
+  attachmentUploaderLabel
+}: {
+  message: ReportMessage;
+  candidateN?: number;
+  attachmentUploaderLabel: Map<string, string>;
+}) {
   const isStudent = message.senderType === "STUDENT";
   const senderLabel = isStudent
     ? candidateN !== undefined ? `Candidate reply #${candidateN}` : "Candidate"
@@ -756,16 +816,25 @@ function ReportMessageBlock({ message, candidateN }: { message: ReportMessage; c
       </div>
       {message.attachments.length > 0 ? (
         <div className="report-attachments">
-          {message.attachments.map((attachment) => (
-            <a
-              key={attachment.id}
-              href={`/api/attachments/${attachment.id}`}
-              className="report-attachment-link"
-              download
-            >
-              Attachment: {attachment.fileName}
-            </a>
-          ))}
+          {message.attachments.map((attachment) => {
+            const uploader = attachmentUploaderLabel.get(attachment.id);
+            return (
+              <div key={attachment.id} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <a
+                  href={`/api/attachments/${attachment.id}`}
+                  className="report-attachment-link"
+                  download
+                >
+                  Attachment: {attachment.fileName}
+                </a>
+                {uploader ? (
+                  <span className="report-meta" style={{ fontSize: "0.78rem", paddingLeft: 10 }}>
+                    Uploaded by {uploader}
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       ) : null}
       {trashedNotes.length > 0 ? (
