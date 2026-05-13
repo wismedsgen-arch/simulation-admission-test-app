@@ -219,5 +219,5 @@ Intentionally **not** wrapped in an npm script — too easy to fire by accident.
 
 ### Development Priorities
 
-1. **Phase H** — Admin data export.
+1. **Phase H** — Admin data export. **Primary purpose: backup / disaster recovery** (save DB state + uploaded files / attachment metadata so the app can be restored after a crash or data loss). **Secondary purpose: post-event analysis of exam data.** Design the export shape with restore-from-export in mind first; analysis-friendly views are a bonus on top.
 
