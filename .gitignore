@@ -22,3 +22,5 @@ tsconfig.tsbuildinfo
 scripts/*
 # ...except the committed, documented QA reset script (Phase F.5)
 !scripts/reset-qa-data.ts
+# ...and the committed, documented restore script (Phase H4)
+!scripts/restore-export.ts
