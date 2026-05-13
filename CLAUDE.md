@@ -135,14 +135,14 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 
 - The app is fully deployed and functional on Railway
 - A Prisma seed script exists and is used to populate demo data
-- **Seed runs on every boot** — Phase G (seed guard) is not yet implemented; see pending work below
+- **Seed is gated by `SEED_ON_BOOT`** — `npm start` still calls `prisma db seed`, but the seed exits immediately unless `SEED_ON_BOOT=true` (Phase G). Default behaviour on Railway is therefore: no demo data is re-applied on boot.
 - The system is in QA phase: testing admin/psychologist/student flows and gathering UX feedback
 - Active branch: `feature/post-exam-review`
 
 ### Data safety on Railway
 
 - **Attachments**: with `STORAGE_MODE=local` (default), uploaded files live on Railway's ephemeral disk and are lost on every redeploy. Set `STORAGE_MODE=s3` (and the matching `STORAGE_*` vars) — or attach a Railway Volume — before any cycle that handles real candidate data.
-- **Seed runs on every boot**: `npm start` calls `prisma db seed` before `next start`. Until Phase G is merged, avoid deploying to a real-event environment without first removing the seed call from `package.json` manually.
+- **Seed is gated**: `npm start` calls `prisma db seed`, but the seed exits immediately unless `SEED_ON_BOOT=true` (Phase G). Leave that env var unset (or set to `"false"`) on Railway production; set it to `"true"` only when bootstrapping a fresh database.
 - **DB backup**: use Railway's Postgres snapshot UI, or run an ad-hoc dump:
   `railway run --service <db-service> -- pg_dump $DATABASE_URL --no-owner --no-acl > backup.sql`
 
@@ -162,6 +162,7 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 | C | **School answer on psychologist live desk + completed review** — `SchoolAnswerPanel` renders alongside template-originated threads during active sessions (two-column layout) and in the completed review page; populated from `ScenarioTemplate.schoolAnswer` with RTL/LTR direction support | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/app/review/[sessionId]/page.tsx` |
 | D | **Candidate action order / timeline** — new Timeline tab on both live desk and completed review showing all session activity sorted by `sentAt` with per-thread message index (`#1`, `#2`, …), entry-type pills (Candidate-initiated / Candidate reply / Follow-up / Psych-initiated / Psych reply), relative time from session start, and HH:mm:ss absolute time; consolidated report has a matching Timeline section and labels candidate replies "Candidate reply #N" | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/app/review/[sessionId]/report/page.tsx` |
 | — | **Post-Phase-C/D stabilization pass** — Compose button works from the psychologist Timeline tab (returns to inbox before opening composer); instructions modal rendered via portal so backdrop-filter clipping doesn't push content off-screen on small viewports; Timeline excludes PRELOADED scenario emails from rows while still counting them toward per-thread numbering (so the first candidate reply to a preloaded thread is still `#2`); Timeline columns use compact HH:mm:ss display with horizontal scroll on narrow screens; outer dashboard sidebar is collapsible with `localStorage` persistence and inner sidebars trimmed modestly | `src/components/psychologist/psychologist-workspace.tsx`, `src/components/psychologist/review-workspace.tsx`, `src/components/shared/dashboard-sidebar.tsx`, `src/components/shared/dashboard-shell.tsx`, `src/app/globals.css` |
+| G | **Seed guard** — `prisma/seed.ts` exits immediately unless `SEED_ON_BOOT=true`; documented in `.env.example`. Default behaviour is therefore "do nothing", which makes `npm start` safe to call on a production database with real candidate data | `prisma/seed.ts`, `.env.example` |
 
 #### Pending
 
@@ -169,13 +170,11 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 |---|---|---|
 | E | **File audit trail** — add `uploadedByType` + `uploadedById` to `SessionAttachment`; add `uploadedByUserId` to `ScenarioFile`; expose in report | `prisma/schema.prisma`, student/psychologist/admin actions, `report/page.tsx` |
 | F | **No-hard-delete audit** — verify no code path physically removes messages, attachments, or scenario files after a session ends; replace any hard-delete with soft-delete | Audit only for now |
-| G | **Seed guard** — add `SEED_ON_BOOT` env var; seed exits immediately unless `SEED_ON_BOOT=true`; document in `.env.example` and here | `prisma/seed.ts`, `.env.example` |
 | H | **Admin data export** — `/admin/export` page: JSON session transcript download + CSV attachment manifest; both in-process (no shell tools required) | `src/app/admin/export/page.tsx`, `src/lib/actions/admin.ts` |
 
 ### Development Priorities
 
-1. **Phase G** — Seed guard. Must-do safety measure before any real-event deployment, because `npm start` still runs `prisma db seed` on every Railway boot.
-2. **Phase E** — File audit trail (schema change, touches multiple actions).
-3. **Phase F** — No-hard-delete audit.
-4. **Phase H** — Admin data export.
+1. **Phase E** — File audit trail (schema change, touches multiple actions).
+2. **Phase F** — No-hard-delete audit.
+3. **Phase H** — Admin data export.
 
