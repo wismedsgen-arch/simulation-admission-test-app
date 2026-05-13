@@ -137,7 +137,7 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 - A Prisma seed script exists and is used to populate demo data
 - **Seed is gated by `SEED_ON_BOOT`** — `npm start` still calls `prisma db seed`, but the seed exits immediately unless `SEED_ON_BOOT=true` (Phase G). Default behaviour on Railway is therefore: no demo data is re-applied on boot.
 - The system is in QA phase: testing admin/psychologist/student flows and gathering UX feedback
-- Active branch: `feature/post-exam-review`
+- Active development line: `feature/phase-f5-qa-reset`, stacked on `feature/phase-f-deletion-audit` — both awaiting testing/merge into `main`
 
 ### Data safety on Railway
 
@@ -193,7 +193,7 @@ Intentionally **not** wrapped in an npm script — too easy to fire by accident.
 - All 17 `ScenarioTemplate` rows on production now contain populated `schoolAnswer` values (verified post-reseed).
 - App re-tested afterward across admin / psychologist / student flows — current Railway production state is considered stable.
 - `SEED_ON_BOOT` must remain **unset** (or `"false"`) on the Railway service. Only flip it to `"true"` for an intentional one-shot reseed, and prefer an inline override (e.g. `railway ssh -- "SEED_ON_BOOT=true npx prisma db seed"`) so it never persists on the service.
-- Active branch remains `feature/post-exam-review`.
+- Active development line is now `feature/phase-f5-qa-reset`, stacked on `feature/phase-f-deletion-audit` — both awaiting testing/merge into `main`. Future work continues from `feature/phase-f5-qa-reset` (or a new branch based on it).
 
 ### Post-exam review — phased implementation status
 
@@ -219,5 +219,5 @@ Intentionally **not** wrapped in an npm script — too easy to fire by accident.
 
 ### Development Priorities
 
-1. **Phase H** — Admin data export. **Primary purpose: backup / disaster recovery** (save DB state + uploaded files / attachment metadata so the app can be restored after a crash or data loss). **Secondary purpose: post-event analysis of exam data.** Design the export shape with restore-from-export in mind first; analysis-friendly views are a bonus on top.
+1. **Phase H** — Admin data export. Primarily for backup/recovery of database state and uploaded files; analysis is secondary.
 
