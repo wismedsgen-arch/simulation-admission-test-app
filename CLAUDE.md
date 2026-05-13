@@ -146,6 +146,47 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 - **DB backup**: use Railway's Postgres snapshot UI, or run an ad-hoc dump:
   `railway run --service <db-service> -- pg_dump $DATABASE_URL --no-owner --no-acl > backup.sql`
 
+### QA reset script (`scripts/reset-qa-data.ts`)
+
+For "we're done testing, prepare for the real event" only. Never during a live exam.
+
+- Dry-run by default. Prints pre-reset counts, the preserve set, the storage size that would be deleted, and any conditions that would block `--execute`.
+- Refuses to execute unless **all** of: `ALLOW_QA_RESET=true`, matching `--confirm "..."` phrase (printed by the dry-run, includes DB host + minute timestamp), `--execute` flag, no `ExamCycle.status === LIVE`, and `--i-understand-production` for non-localhost hosts.
+- Default preserved users: any user whose normalized `fullName` matches `BOOTSTRAP_ADMIN_NAME` (env), falling back to "Einan Farhi". Extend with `--preserve-user-id <id>`, `--preserve-name "<name>"`, or `--keep-approved-staff`. Use `--no-default-preserve` or `--allow-empty-preserve` for total wipes (refused otherwise).
+- Scenario content (Scenario / Role / Template / File / TemplateAttachment) is **preserved by default**. Pass `--wipe-scenarios` to remove it (plus its storage).
+- Storage files are gathered before the DB transaction and deleted after commit, best-effort.
+- Will refuse if scenarios are kept but their `createdBy` user is not preserved (`Scenario.createdById` is `Restrict`).
+- Does **not** reseed afterwards. Run `SEED_ON_BOOT=true npx prisma db seed` separately if needed.
+- Not referenced from `npm start` / any boot path / app code.
+
+Common invocations:
+```bash
+# Dry-run locally
+ALLOW_QA_RESET=true npx tsx scripts/reset-qa-data.ts
+
+# Execute locally (paste the phrase the dry-run printed)
+ALLOW_QA_RESET=true npx tsx scripts/reset-qa-data.ts \
+  --confirm "RESET QA DATA FOR localhost AT 2026-05-13T14:22Z" --execute
+
+# Wipe scenarios too
+... --execute --wipe-scenarios
+
+# Against Railway (run via railway ssh so ALLOW_QA_RESET stays in that shell)
+railway ssh -- "ALLOW_QA_RESET=true npx tsx scripts/reset-qa-data.ts \
+  --confirm 'RESET QA DATA FOR <db-host> AT <timestamp>' \
+  --execute --i-understand-production"
+```
+
+### Local hard-reset (schema drop)
+
+If you need a true factory reset of the local dev DB (drops every table, recreates schema from `prisma/schema.prisma`), use Prisma's built-in commands — no custom script:
+```bash
+npx prisma migrate reset --skip-seed           # drop + recreate schema, no seed
+SEED_ON_BOOT=true npx prisma migrate reset     # drop + recreate + run seed
+rm -rf ./.uploads/*                            # also clear local storage
+```
+Intentionally **not** wrapped in an npm script — too easy to fire by accident.
+
 ### Production recovery — 2026-05-13
 
 - Production Railway DB cleanup + reseed completed successfully. Stale QA/demo data created before `schoolAnswer` was implemented has been wiped; the database was reseeded against the current schema and JSON.
@@ -173,10 +214,10 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 | G | **Seed guard** — `prisma/seed.ts` exits immediately unless `SEED_ON_BOOT=true`; documented in `.env.example`. Default behaviour is therefore "do nothing", which makes `npm start` safe to call on a production database with real candidate data | `prisma/seed.ts`, `.env.example` |
 | E | **File audit trail** — nullable `uploadedByType` + `uploadedById` on `SessionAttachment` and `uploadedByUserId` (+ `User` relation) on `ScenarioFile`; populated in every upload path (student=STUDENT/cycleStudentId, psychologist compose/reply=STAFF/userId, preloaded + follow-up template propagation=SYSTEM/null, admin scenario file=actor.userId); consolidated review report renders an "Uploaded by Candidate / Psychologist / Scenario system" line under each attachment. Pre-existing rows show no uploader line (acceptable historical gap) | `prisma/schema.prisma`, `src/lib/actions/student.ts`, `src/lib/actions/psychologist.ts`, `src/lib/actions/admin.ts`, `src/app/review/[sessionId]/report/page.tsx` |
 | F | **Deletion-safety audit & guards** — student/psychologist mailbox already soft-delete-only (no change needed). Admin destructive paths hardened: `deleteExamCycleAction` blocks when status is `LIVE` or any `Session` rows exist (prevents one-click wipe of candidate evidence); `deleteScenarioTemplateAction` blocks when any `SessionMessage.templateId` references it (preserves report school-answer linkage); `deleteScenarioRoleAction` blocks when role is referenced by templates / messagesSent / drafts; `deleteScenarioAction` and the user-delete guard were already correct. Storage cleanup added: new `deleteFile(storageKey)` in `src/lib/storage/index.ts` (handles local + S3, swallows ENOENT/NoSuchKey); called from `deleteScenarioFileAction`, `deleteScenarioTemplateAttachmentAction`, `deleteScenarioTemplateAction` (for the template's own attachments), and `deleteScenarioAction` (for all child scenario files + template attachments fetched before the cascade). No archive UX added — admins simply get a clear "cannot be deleted safely" message in the existing error panels | `src/lib/storage/index.ts`, `src/lib/actions/admin.ts` |
+| F.5 | **QA reset script** — `scripts/reset-qa-data.ts` (TypeScript, runs via tsx). Dry-run by default; refuses `--execute` unless `ALLOW_QA_RESET=true`, matching `--confirm` phrase (DB host + minute timestamp), no live `ExamCycle`, and `--i-understand-production` for non-localhost hosts. Preserve set defaults to `BOOTSTRAP_ADMIN_NAME` env → "Einan Farhi" fallback, extendable via `--preserve-user-id` / `--preserve-name` / `--keep-approved-staff`. Authored scenarios preserved unless `--wipe-scenarios`. Pre-flight check refuses when keeping a scenario whose `createdById` user is not preserved. Storage files gathered before the Prisma `$transaction`, deleted after commit, best-effort. Documented in CLAUDE.md "Data safety on Railway". `.gitignore` adjusted to un-ignore this single file (vs. the catch-all `scripts/` ignore for one-offs). Local hard-reset documented separately as `prisma migrate reset --skip-seed` — no convenience wrapper | `scripts/reset-qa-data.ts`, `.gitignore`, `CLAUDE.md` |
 | H | **Admin data export** — `/admin/export` page: JSON session transcript download + CSV attachment manifest; both in-process (no shell tools required) | `src/app/admin/export/page.tsx`, `src/lib/actions/admin.ts` |
 
 ### Development Priorities
 
-1. **Phase F.5** — QA reset script (`scripts/reset-qa-data.ts`, gated by `ALLOW_QA_RESET=true` + confirm token, preserves protected admin, cleans storage). Separate from routine admin delete; only for "wipe QA before real event."
-2. **Phase H** — Admin data export.
+1. **Phase H** — Admin data export.
 
