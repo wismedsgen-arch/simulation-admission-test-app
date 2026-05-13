@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { hashPassword } from "@/lib/auth/crypto";
 import { requireStaff } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { deleteFile } from "@/lib/storage";
 import { persistFiles } from "@/lib/storage/upload-files";
 import {
   generateAccessCode,
@@ -463,6 +464,10 @@ export async function deleteScenarioFileAction(
     where: { id: fileId }
   });
 
+  if (scenarioFile.storageKey) {
+    await deleteFile(scenarioFile.storageKey);
+  }
+
   await writeAdminAudit("delete_scenario_file", "ScenarioFile", fileId, {
     scenarioId: scenarioFile.scenarioId
   });
@@ -590,9 +595,29 @@ export async function deleteScenarioTemplateAction(
     return { error: "That email template could not be found." };
   }
 
+  const messageCount = await prisma.sessionMessage.count({
+    where: { templateId }
+  });
+
+  if (messageCount > 0) {
+    return {
+      error:
+        "This template was used in completed sessions and cannot be deleted, as it would break their reports."
+    };
+  }
+
+  const attachments = await prisma.scenarioTemplateAttachment.findMany({
+    where: { templateId },
+    select: { storageKey: true }
+  });
+
   await prisma.scenarioTemplate.delete({
     where: { id: templateId }
   });
+
+  for (const attachment of attachments) {
+    await deleteFile(attachment.storageKey);
+  }
 
   await writeAdminAudit("delete_scenario_template", "ScenarioTemplate", templateId, { scenarioId });
   revalidatePath(`/admin/scenarios/${scenarioId}`);
@@ -735,6 +760,7 @@ export async function deleteScenarioTemplateAttachmentAction(
   }
 
   await prisma.scenarioTemplateAttachment.delete({ where: { id: attachmentId } });
+  await deleteFile(attachment.storageKey);
 
   await writeAdminAudit("delete_scenario_template_attachment", "ScenarioTemplateAttachment", attachmentId, {
     scenarioId
@@ -778,9 +804,28 @@ export async function deleteScenarioAction(
     };
   }
 
+  const scenarioFiles = await prisma.scenarioFile.findMany({
+    where: { scenarioId: scenario.id },
+    select: { storageKey: true }
+  });
+
+  const templateAttachments = await prisma.scenarioTemplateAttachment.findMany({
+    where: { template: { scenarioId: scenario.id } },
+    select: { storageKey: true }
+  });
+
   await prisma.scenario.delete({
     where: { id: scenario.id }
   });
+
+  for (const file of scenarioFiles) {
+    if (file.storageKey) {
+      await deleteFile(file.storageKey);
+    }
+  }
+  for (const attachment of templateAttachments) {
+    await deleteFile(attachment.storageKey);
+  }
 
   await writeAdminAudit("delete_scenario", "Scenario", scenario.id, { name: scenario.name });
   redirect("/admin/scenarios");
@@ -792,6 +837,36 @@ export async function deleteExamCycleAction(
 ): Promise<ActionResult> {
   await ensureAdmin();
   const cycleId = String(formData.get("cycleId") ?? "");
+
+  if (!cycleId) {
+    return { error: "That exam cycle could not be found." };
+  }
+
+  const cycle = await prisma.examCycle.findUnique({
+    where: { id: cycleId },
+    select: {
+      id: true,
+      status: true,
+      _count: {
+        select: { sessions: true }
+      }
+    }
+  });
+
+  if (!cycle) {
+    return { error: "That exam cycle no longer exists." };
+  }
+
+  if (cycle.status === ExamCycleStatus.LIVE) {
+    return { error: "This exam cycle is live. End the live event before deleting it." };
+  }
+
+  if (cycle._count.sessions > 0) {
+    return {
+      error:
+        "This exam cycle has session activity recorded and cannot be deleted without losing candidate evidence."
+    };
+  }
 
   await prisma.examCycle.delete({
     where: { id: cycleId }
@@ -811,6 +886,37 @@ export async function deleteScenarioRoleAction(
 
   if (!roleId || !scenarioId) {
     return { error: "That scenario role could not be found." };
+  }
+
+  const role = await prisma.scenarioRole.findUnique({
+    where: { id: roleId },
+    select: {
+      id: true,
+      scenarioId: true,
+      _count: {
+        select: {
+          templates: true,
+          messagesSent: true,
+          drafts: true
+        }
+      }
+    }
+  });
+
+  if (!role || role.scenarioId !== scenarioId) {
+    return { error: "That scenario role no longer exists." };
+  }
+
+  if (role._count.templates > 0) {
+    return {
+      error: "This role is referenced by email templates. Remove or reassign those templates first."
+    };
+  }
+
+  if (role._count.messagesSent > 0 || role._count.drafts > 0) {
+    return {
+      error: "This role is referenced by historical messages and cannot be deleted."
+    };
   }
 
   await prisma.scenarioRole.delete({

@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client
@@ -101,4 +102,37 @@ export async function getFileBuffer(storageKey: string) {
 
   const root = process.env.STORAGE_LOCAL_DIR ?? "./.uploads";
   return fs.readFile(path.join(process.cwd(), root, storageKey));
+}
+
+export async function deleteFile(storageKey: string): Promise<void> {
+  if (!storageKey) return;
+
+  if (storageMode() === "s3") {
+    const client = createS3Client();
+    try {
+      await client.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.STORAGE_BUCKET,
+          Key: storageKey
+        })
+      );
+    } catch (error) {
+      const err = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+      if (err?.name === "NoSuchKey" || err?.$metadata?.httpStatusCode === 404) {
+        return;
+      }
+      throw error;
+    }
+    return;
+  }
+
+  const root = process.env.STORAGE_LOCAL_DIR ?? "./.uploads";
+  const filePath = path.join(process.cwd(), root, storageKey);
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === "ENOENT") return;
+    throw error;
+  }
 }
