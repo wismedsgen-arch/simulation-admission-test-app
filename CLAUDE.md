@@ -146,6 +146,14 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 - **DB backup**: use Railway's Postgres snapshot UI, or run an ad-hoc dump:
   `railway run --service <db-service> -- pg_dump $DATABASE_URL --no-owner --no-acl > backup.sql`
 
+### Production recovery — 2026-05-13
+
+- Production Railway DB cleanup + reseed completed successfully. Stale QA/demo data created before `schoolAnswer` was implemented has been wiped; the database was reseeded against the current schema and JSON.
+- All 17 `ScenarioTemplate` rows on production now contain populated `schoolAnswer` values (verified post-reseed).
+- App re-tested afterward across admin / psychologist / student flows — current Railway production state is considered stable.
+- `SEED_ON_BOOT` must remain **unset** (or `"false"`) on the Railway service. Only flip it to `"true"` for an intentional one-shot reseed, and prefer an inline override (e.g. `railway ssh -- "SEED_ON_BOOT=true npx prisma db seed"`) so it never persists on the service.
+- Active branch remains `feature/post-exam-review`.
+
 ### Post-exam review — phased implementation status
 
 #### Completed
