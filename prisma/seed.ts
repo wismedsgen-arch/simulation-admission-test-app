@@ -565,6 +565,11 @@ async function seedCompletedSession(
 // ---------------------------------------------------------------------------
 
 async function main() {
+  if (process.env.SEED_ON_BOOT !== "true") {
+    log("SEED_ON_BOOT is not 'true' — skipping seed. Set SEED_ON_BOOT=true to enable.");
+    return;
+  }
+
   log("Starting seed...");
 
   const adminId = await seedAdmin();
