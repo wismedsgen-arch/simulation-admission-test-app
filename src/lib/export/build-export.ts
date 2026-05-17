@@ -162,7 +162,10 @@ async function getSchemaFingerprint(): Promise<string> {
       path.join(process.cwd(), "prisma", "schema.prisma"),
       "utf8"
     );
-    return createHash("sha256").update(schema).digest("hex");
+    // Normalize CRLF → LF so the fingerprint is stable across platforms
+    // (Windows working copies otherwise hash differently than Linux/CI).
+    const normalized = schema.replace(/\r\n/g, "\n");
+    return createHash("sha256").update(normalized).digest("hex");
   } catch {
     return "unknown";
   }
