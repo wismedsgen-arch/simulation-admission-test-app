@@ -10,7 +10,7 @@ export function AdminShell({
 }: {
   title: string;
   subtitle: string;
-  active: "overview" | "scenarios" | "cycles";
+  active: "overview" | "scenarios" | "cycles" | "export";
   children: ReactNode;
 }) {
   return (
@@ -29,6 +29,11 @@ export function AdminShell({
           href: "/admin/exam-cycles",
           label: "Exams",
           active: active === "cycles"
+        },
+        {
+          href: "/admin/export",
+          label: "Export",
+          active: active === "export"
         }
       ]}
     >

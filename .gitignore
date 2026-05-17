@@ -11,9 +11,17 @@ testing
 .env.*
 !.env.example
 .claude/
+backups/
 
 # TypeScript incremental build cache — regenerates on every tsc run
 tsconfig.tsbuildinfo
 
-# Local-only helper scripts (one-offs, not required to run the app)
-scripts/
+# Local-only helper scripts (one-offs, not required to run the app).
+# Pattern is "scripts/*" not "scripts/" so the negation below can re-include
+# specific files — a trailing-slash ignore stops git descending into the
+# directory entirely, which would bypass the `!` exception.
+scripts/*
+# ...except the committed, documented QA reset script (Phase F.5)
+!scripts/reset-qa-data.ts
+# ...and the committed, documented restore script (Phase H4)
+!scripts/restore-export.ts
