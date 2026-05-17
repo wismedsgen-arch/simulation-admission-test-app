@@ -311,7 +311,26 @@ async function gatherStorageKeys(wipeScenarios: boolean): Promise<StorageEntry[]
   const sessionAttachments = await prisma.sessionAttachment.findMany({
     select: { storageKey: true, sizeBytes: true }
   });
+
+  // When scenarios are preserved, the ScenarioTemplateAttachment rows
+  // survive. Preloaded template propagation (psychologist.ts) creates
+  // SessionAttachment rows that REUSE the originating template
+  // attachment's storageKey rather than copying the blob — so deleting
+  // every SessionAttachment storageKey would unlink blobs still
+  // referenced by surviving ScenarioTemplateAttachment rows. Exclude
+  // any key that's still referenced.
+  const keptTemplateAttachmentKeys = wipeScenarios
+    ? new Set<string>()
+    : new Set(
+        (
+          await prisma.scenarioTemplateAttachment.findMany({
+            select: { storageKey: true }
+          })
+        ).map((a) => a.storageKey)
+      );
+
   for (const f of sessionAttachments) {
+    if (keptTemplateAttachmentKeys.has(f.storageKey)) continue;
     out.push({ storageKey: f.storageKey, sizeBytes: f.sizeBytes, source: "SessionAttachment" });
   }
 
