@@ -11,6 +11,7 @@ testing
 .env.*
 !.env.example
 .claude/
+backups/
 
 # TypeScript incremental build cache — regenerates on every tsc run
 tsconfig.tsbuildinfo
