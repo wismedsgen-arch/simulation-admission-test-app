@@ -407,7 +407,7 @@ export function StudentWorkspace({
 
               <div className="divider" />
 
-              <button type="button" className="btn btn-secondary" style={{ justifyContent: "flex-start" }} onClick={() => setShowInstructions(true)}>
+              <button type="button" className="btn btn-instructions" style={{ justifyContent: "flex-start" }} onClick={() => setShowInstructions(true)}>
                 <Info size={16} />
                 Show instructions
               </button>

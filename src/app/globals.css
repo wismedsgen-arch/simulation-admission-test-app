@@ -158,6 +158,25 @@ img {
   color: var(--text-muted);
 }
 
+.btn-instructions {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border: 1.5px solid var(--blue);
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.18);
+}
+
+.btn-instructions:hover {
+  background: var(--blue);
+  color: white;
+  box-shadow: 0 10px 24px rgba(26, 115, 232, 0.28);
+}
+
+.btn-instructions:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
