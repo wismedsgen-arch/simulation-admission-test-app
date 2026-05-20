@@ -137,7 +137,11 @@ See `CODEX_EDITING_AND_DEPLOYING_NOTES.md` for the full Railway workflow includi
 - A Prisma seed script exists and is used to populate demo data
 - **Seed is gated by `SEED_ON_BOOT`** — `npm start` still calls `prisma db seed`, but the seed exits immediately unless `SEED_ON_BOOT=true` (Phase G). Default behaviour on Railway is therefore: no demo data is re-applied on boot.
 - The system is in QA phase: testing admin/psychologist/student flows and gathering UX feedback
-- Active development line: `feature/phase-f5-qa-reset`, stacked on `feature/phase-f-deletion-audit` — both awaiting testing/merge into `main`
+- `main` currently contains the latest stable merged state, including Phase E/F/F.5/H work.
+- New work should generally branch from `main` into small issue-focused feature/fix branches.
+- Prefer one issue/change per branch and merge frequently after testing.
+- Keep active feature branches backed up on GitHub regularly; avoid leaving important work only local.
+- Railway production deploys from `main`.
 
 ### Data safety on Railway
 
