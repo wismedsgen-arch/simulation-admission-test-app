@@ -14,6 +14,9 @@
   --blue: #1a73e8;
   --blue-soft: rgba(26, 115, 232, 0.12);
   --green: #34a853;
+  --green-soft: rgba(52, 168, 83, 0.12);
+  --orange: #d97706;
+  --orange-soft: rgba(217, 119, 6, 0.12);
   --red: #d93025;
   --yellow: #fbbc04;
   --shadow-sm: 0 8px 24px rgba(31, 51, 93, 0.08);
@@ -159,21 +162,21 @@ img {
 }
 
 .btn-instructions {
-  background: var(--blue-soft);
-  color: var(--blue);
-  border: 1.5px solid var(--blue);
+  background: var(--orange-soft);
+  color: var(--orange);
+  border: 1.5px solid var(--orange);
   font-weight: 600;
-  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.18);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.18);
 }
 
 .btn-instructions:hover {
-  background: var(--blue);
+  background: var(--orange);
   color: white;
-  box-shadow: 0 10px 24px rgba(26, 115, 232, 0.28);
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.28);
 }
 
 .btn-instructions:focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--orange);
   outline-offset: 2px;
 }
 
