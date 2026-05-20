@@ -196,7 +196,13 @@ function SchoolAnswerPanel({ schoolAnswer, schoolAnswerDirection }: { schoolAnsw
   );
 }
 
-function TimelineView({ entries }: { entries: TimelineEntry[] }) {
+function TimelineView({
+  entries,
+  onSelect
+}: {
+  entries: TimelineEntry[];
+  onSelect: (messageId: string) => void;
+}) {
   if (entries.length === 0) {
     return (
       <div className="panel" style={{ margin: 22, padding: 22 }}>
@@ -243,8 +249,12 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
       {entries.map((entry) => {
         const cfg = typeConfig[entry.entryType];
         return (
-          <div
+          <button
+            type="button"
             key={entry.messageId}
+            className="timeline-row"
+            onClick={() => onSelect(entry.messageId)}
+            title="Open this email thread"
             style={{
               display: "grid",
               gridTemplateColumns,
@@ -291,7 +301,7 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
             <span style={{ fontSize: "0.85rem", color: "#5f6368", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               #{entry.threadIndex}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -472,6 +482,37 @@ export function PsychologistWorkspace({
         };
       });
   }, [messages, messageById, startedAt, preloadedTemplateIds]);
+
+  function openThreadFromTimeline(messageId: string) {
+    const msg = messageById.get(messageId);
+    if (!msg) return;
+
+    // Inbox/Sent if the clicked message itself is not trashed.
+    // If it is trashed, fall back to whichever mailbox still has any
+    // non-trashed sibling in the same thread; only land in Trash when
+    // the entire thread is trashed.
+    let targetMailbox: Mailbox;
+    if (!msg.deletedByStaffAt) {
+      targetMailbox = msg.senderType === "STUDENT" ? "inbox" : "sent";
+    } else {
+      const rootId = getRootId(messageId, messageById);
+      const threadMsgs = messages.filter((m) => getRootId(m.id, messageById) === rootId);
+      if (threadMsgs.some((m) => m.senderType === "STUDENT" && !m.deletedByStaffAt)) {
+        targetMailbox = "inbox";
+      } else if (threadMsgs.some((m) => m.senderType === "STAFF" && !m.deletedByStaffAt)) {
+        targetMailbox = "sent";
+      } else {
+        targetMailbox = "trash";
+      }
+    }
+
+    setMailbox(targetMailbox);
+    setSelectedMessageId(messageId);
+    setReplyOpen(false);
+    setReplyBody("");
+    setReplyBodyDirection("AUTO");
+    setView("read");
+  }
 
   useEffect(() => {
     if (selectedMessageId && messageById.has(selectedMessageId)) {
@@ -811,7 +852,7 @@ export function PsychologistWorkspace({
                   </div>
                 </div>
               ) : mailbox === "timeline" ? (
-                <TimelineView entries={timelineEntries} />
+                <TimelineView entries={timelineEntries} onSelect={openThreadFromTimeline} />
               ) : view === "read" && mailbox === "files" && selectedFile ? (
                 <div style={{ padding: "28px clamp(18px, 3vw, 40px)", minHeight: "100%" }}>
                   <div className="stack-md" style={{ width: "100%", maxWidth: 1100, margin: "0 auto", minHeight: "calc(100vh - 320px)" }}>

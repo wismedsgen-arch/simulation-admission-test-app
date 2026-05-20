@@ -198,7 +198,13 @@ function ThreadView({
   );
 }
 
-function TimelineView({ entries }: { entries: TimelineEntry[] }) {
+function TimelineView({
+  entries,
+  onSelect
+}: {
+  entries: TimelineEntry[];
+  onSelect: (messageId: string) => void;
+}) {
   if (entries.length === 0) {
     return (
       <div className="panel" style={{ margin: 22, padding: 22 }}>
@@ -246,8 +252,12 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
         const cfg = typeConfig[entry.entryType];
         const isCandidate = entry.entryType === "CANDIDATE_INITIATED" || entry.entryType === "CANDIDATE_REPLY";
         return (
-          <div
+          <button
+            type="button"
             key={entry.messageId}
+            className="timeline-row"
+            onClick={() => onSelect(entry.messageId)}
+            title="Open this email thread"
             style={{
               display: "grid",
               gridTemplateColumns,
@@ -294,7 +304,7 @@ function TimelineView({ entries }: { entries: TimelineEntry[] }) {
             <span style={{ fontSize: "0.85rem", color: "#5f6368", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
               #{entry.threadIndex}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -426,6 +436,15 @@ export function ReviewWorkspace({
 
   const mailboxLabel = mailbox === "inbox" ? "Inbox" : mailbox === "sent" ? "Sent" : mailbox === "files" ? "Files" : "Timeline";
 
+  function openThreadFromTimeline(messageId: string) {
+    const msg = messageById.get(messageId);
+    if (!msg) return;
+    // Review mode has no trash mailbox; route by sender type.
+    setMailbox(msg.senderType === "STUDENT" ? "inbox" : "sent");
+    setSelectedMessageId(messageId);
+    setView("read");
+  }
+
   return (
     <section className="panel" style={{ overflow: "hidden" }}>
       <header
@@ -503,7 +522,7 @@ export function ReviewWorkspace({
 
           <div style={{ minWidth: 0, overflow: "auto", minHeight: 0 }}>
             {mailbox === "timeline" ? (
-              <TimelineView entries={timelineEntries} />
+              <TimelineView entries={timelineEntries} onSelect={openThreadFromTimeline} />
             ) : view === "read" && mailbox === "files" && selectedFile ? (
               <div style={{ padding: "28px clamp(18px, 3vw, 40px)", minHeight: "100%" }}>
                 <div className="stack-md" style={{ width: "100%", maxWidth: 1100, margin: "0 auto" }}>

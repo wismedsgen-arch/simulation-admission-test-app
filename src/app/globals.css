@@ -784,6 +784,23 @@ html[data-sidebar-collapsed="1"] .dashboard-body {
   box-shadow: var(--shadow-sm);
 }
 
+.timeline-row {
+  width: 100%;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.timeline-row:hover {
+  background-color: rgba(26, 115, 232, 0.08);
+}
+
+.timeline-row:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
